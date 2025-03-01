@@ -28,3 +28,20 @@ CREATE TABLE USERS(
     CitizenID INT,
     FOREIGN KEY (CitizenID) REFERENCES CITIZENS(CitizenID) ON DELETE SET NULL
 );
+
+CREATE TABLE ASSETS (
+    AssetID INT PRIMARY KEY,
+    Type VARCHAR(100) NOT NULL,
+    Location VARCHAR(255) NOT NULL,
+    InstallationDate DATE NOT NULL,
+    Condition VARCHAR(50) CHECK (Condition IN ('Good', 'Needs Repair', 'Damaged', 'Replaced')),
+    LastMaintenanceDate DATE
+);
+
+CREATE TABLE HOUSEHOLDS (
+    HouseholdID INT PRIMARY KEY,
+    Address VARCHAR(255) NOT NULL,
+    Income DECIMAL(12,2) NOT NULL CHECK (Income >= 0),
+    NumberOfMembers INT NOT NULL CHECK (NumberOfMembers > 0),
+    PropertyValue DECIMAL(12,2) CHECK (PropertyValue >= 0)
+);

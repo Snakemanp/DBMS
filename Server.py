@@ -39,10 +39,19 @@ class Passkey(db.Model):
     citizen_id = db.Column(db.Integer, db.ForeignKey('citizen.id'))
 
 class Employee(db.Model):
-    __tablename__ = 'panchayat_employee'
+    __tablename__ = 'employee'
     id = db.Column(db.Integer, primary_key=True)
     citizen_id = db.Column(db.Integer, nullable=False)
     employee_role = db.Column(db.String(10))
+    
+class Asset(db.Model):
+    __tablename__ = 'assets'
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(100), nullable=False)
+    location = db.Column(db.String(255), nullable=False)
+    installation_date = db.Column(db.Date, nullable=False)
+    condition = db.Column(db.String(50), nullable=False)
+    last_maintenance_date = db.Column(db.Date)
 
 @app.route('/')
 def login_page():
@@ -189,6 +198,34 @@ def home_citizen():
     }
 
     return jsonify({"citizen": citizen_data}), send_file("Home_citizen.html")
+
+# Employee - Resources
+@app.route('/resources')
+def resources_page():
+    d = request.args.get('id', type=int)
+    employee = Employee.query.filter_by(citizen_id = d).first()
+    if not employee:
+        return "User not found", 404
+    return send_file('Resources_employee.html')
+
+@app.route('/api/resources', methods=['GET'])
+def get_resources():
+    resources = Asset.query.all()
+    return jsonify([{
+        'AssetID': resource.id,
+        'Type': resource.type,
+        'Location': resource.location,
+        'Condition': resource.condition
+    } for resource in resources])
+
+@app.route('/api/delete_resource/<int:asset_id>', methods=['DELETE'])
+def delete_resource(asset_id):
+    resource = Asset.query.get(asset_id)
+    if resource:
+        db.session.delete(resource)
+        db.session.commit()
+        return jsonify({'message': 'Resource deleted successfully'}), 200
+    return jsonify({'error': 'Resource not found'}), 404
 
 
 if __name__ == "__main__":

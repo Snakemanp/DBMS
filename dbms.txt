@@ -64,13 +64,11 @@ erDiagram
       string Type
       string Location
       date InstallationDate
-      
       string Condition
       date LastMaintenanceDate
     }
     HOUSEHOLDS {
       int HouseholdID PK
-      
       string Address
       decimal Income
       int NumberOfMembers

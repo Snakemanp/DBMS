@@ -29,3 +29,16 @@ INSERT INTO USERS (UserID, Username, Password, Role, CitizenID) VALUES
 (203, 'rajesh_mon', 'mon789', 'Monitor', 7),
 (204, 'sanya_citizen', 'citizen101', 'Citizen', 8);
 
+INSERT INTO ASSETS (AssetID, Type, Location, InstallationDate, Condition, LastMaintenanceDate) VALUES
+(1, 'Water Pump', 'Village A', '2018-06-15', 'Good', '2023-07-10'),
+(2, 'Solar Street Light', 'Village B', '2020-02-20', 'Needs Repair', '2023-10-05'),
+(3, 'Public Library', 'Village C', '2015-09-12', 'Good', '2022-12-01'),
+(4, 'Community Hall', 'Village D', '2017-11-25', 'Damaged', NULL);
+
+INSERT INTO HOUSEHOLDS (HouseholdID, Address, Income, NumberOfMembers, PropertyValue) VALUES
+(201, 'Village A, House 1', 50000, 4, 300000),
+(202, 'Village B, House 2', 70000, 5, 400000),
+(203, 'Village C, House 3', 30000, 3, 250000),
+(204, 'Village D, House 4', 60000, 6, 350000);
+
+

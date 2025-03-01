@@ -141,7 +141,7 @@
     </div>
 
     <!-- Resources Table -->
-    <table>
+    <table id="resourcesTable">
         <tr>
             <th>ID</th>
             <th>Type</th>
@@ -149,17 +149,32 @@
             <th>Condition</th>
             <th>Action</th>
         </tr>
-        {% for resource in resources %}
-        <tr>
-            <td>{{ resource.AssetID }}</td>
-            <td>{{ resource.Type }}</td>
-            <td>{{ resource.Location }}</td>
-            <td>{{ resource.Condition }}</td>
-            <td>
-                <a href="/delete_resource/{{ resource.AssetID }}" class="delete-btn">Delete</a>
-            </td>
-        </tr>
-        {% endfor %}
     </table>
+    
+    <script>
+        async function fetchResources() {
+            const response = await fetch('/api/resources');
+            const resources = await response.json();
+            const table = document.getElementById('resourcesTable');
+    
+            resources.forEach(resource => {
+                const row = table.insertRow();
+                row.innerHTML = `
+                    <td>${resource.AssetID}</td>
+                    <td>${resource.Type}</td>
+                    <td>${resource.Location}</td>
+                    <td>${resource.Condition}</td>
+                    <td><button onclick="deleteResource(${resource.AssetID})">Delete</button></td>
+                `;
+            });
+        }
+    
+        async function deleteResource(assetID) {
+            await fetch(`/api/delete_resource/${assetID}`, { method: 'DELETE' });
+            location.reload();
+        }
+    
+        fetchResources();
+    </script>
 </body>
 </html>

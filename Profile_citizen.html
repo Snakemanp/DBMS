@@ -172,6 +172,7 @@
         #saveBtn:hover {
             background-color: #45a049;
         }
+
     </style>
     <script>
         window.onload = function() {
@@ -198,10 +199,11 @@
                 document.getElementById("content").style.display = "block";
                 
                 // Populate profile fields
-                document.getElementById("name").value = data.name;
-                document.getElementById("phone").value = data.phone;
-                document.getElementById("dob").value = data.dob;
-                document.getElementById("gender").value = data.gender;
+                document.getElementById("name").value = data.name || "";
+                document.getElementById("username").value = data.username || "";
+                document.getElementById("phone").value = data.phone || "";
+                document.getElementById("dob").value = data.dob || "";
+                document.getElementById("gender").value = data.gender || "";
                 document.getElementById("job").value = data.job || "";
                 document.getElementById("qualification").value = data.qualification || "";
             })
@@ -213,12 +215,14 @@
 
         function toggleEditMode() {
             const isEditing = document.getElementById("editToggle").checked;
-            document.getElementById("name").disabled = !isEditing;
-            document.getElementById("phone").disabled = !isEditing;
-            document.getElementById("dob").disabled = !isEditing;
-            document.getElementById("gender").disabled = !isEditing;
+
+            // Toggle visibility of fields
+            document.getElementById("username").disabled = !isEditing;
+            document.getElementById("password").disabled = !isEditing;
             document.getElementById("job").disabled = !isEditing;
             document.getElementById("qualification").disabled = !isEditing;
+
+            // Show/hide save button
             document.getElementById("saveBtn").style.display = isEditing ? "block" : "none";
         }
 
@@ -228,10 +232,8 @@
 
             const updatedData = {
                 id: id,
-                name: document.getElementById("name").value,
-                phone: document.getElementById("phone").value,
-                dob: document.getElementById("dob").value,
-                gender: document.getElementById("gender").value,
+                username: document.getElementById("username").value,
+                password: document.getElementById("password").value,
                 job: document.getElementById("job").value,
                 qualification: document.getElementById("qualification").value
             };
@@ -287,7 +289,9 @@
         <a id="services" href="/services">📑 Service-Request</a>
     </div>
 
+    <!-- Loading Message -->
     <h2 id="loading" class="main-content">Loading profile...</h2>
+
     <!-- Main Content -->
     <div id="content" class="main-content" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -302,8 +306,10 @@
             <label>Phone: <input type="text" id="phone" disabled></label><br>
             <label>DOB: <input type="text" id="dob" disabled></label><br>
             <label>Gender: <input type="text" id="gender" disabled></label><br>
-            <label>JOB: <input type="text" id="job" disabled></label><br>
+            <label>Job: <input type="text" id="job" disabled></label><br>
             <label>Qualification: <input type="text" id="qualification" disabled></label><br>
+            <label>Username: <input type="text" id="username" disabled></label><br>
+            <label>Password: <input type="text" id="password" disabled></label><br>
             <button type="button" id="saveBtn" style="display: none;" onclick="saveProfile()">Save</button>
         </form>
     </div>

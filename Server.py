@@ -17,6 +17,7 @@ db = SQLAlchemy(app)
 
 # Data base tables definations
 # An example
+
 class Citizen(db.Model):
     __tablename__ = 'citizen'  # Table name in PostgreSQL
     id = db.Column(db.Integer, primary_key=True)
@@ -27,29 +28,21 @@ class Citizen(db.Model):
     contact_number = db.Column(db.String(15))
     job = db.Column(db.String(50))
     qualification = db.Column(db.String(50))
-    father_id = db.Column(db.Integer)
-    mother_id = db.Column(db.Integer)
+
+
+class Passkey(db.Model):
+    __tablename__ = 'user'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), nullable=False, unique=True)
+    password = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(20), nullable=False)  # "Admin/Employee/Citizen/Monitor"
+    citizen_id = db.Column(db.Integer, db.ForeignKey('citizen.id'))
 
 class Employee(db.Model):
     __tablename__ = 'panchayat_employee'
     id = db.Column(db.Integer, primary_key=True)
     citizen_id = db.Column(db.Integer, nullable=False)
     employee_role = db.Column(db.String(10))
-
-# Fill the code for declaration and query
-# class Citizen(db.Model):
-#     __tablename__ = 'citizen'
-#     id = db.Column(db.Integer, primary_key=True)
-#     # Citizen table
-
-# class Employee(db.Model):
-#     __tablename__ = 'panchayat_employee'
-#     id = db.Column(db.Integer, primary_key=True)
-
-class Passkey(db.Model):
-    __tablename__ = 'Passkey'
-    id = db.Column(db.Integer, primary_key=True)
-    # Table containing citizen id and password
 
 @app.route('/')
 def login_page():
@@ -63,15 +56,11 @@ def login():
     if not data or 'username' not in data or 'password' not in data:
         return jsonify({'error': 'Missing username or password'}), 400
 
-    username_or_phone = data['username']
+    username = data['username']
     password = data['password']
 
-    if username_or_phone.isdigit():
-        query = ''# An explample query "SELECT id FROM Passkey WHERE phone = :phone AND password = :password;"
-        params = {"phone": username_or_phone, "password": password}
-    else:
-        query = ''# An explample query "SELECT id FROM Passkey WHERE username = :username AND password = :password;"
-        params = {"username": username_or_phone, "password": password}
+    query = ''# An explample query "SELECT id FROM Passkey WHERE username = :username AND password = :password;"
+    params = {"username": username, "password": password}
 
     result = db.session.execute(db.text(query), params).fetchone()
 
@@ -121,10 +110,12 @@ def get_citizen():
         return jsonify({"error": "Citizen not found"}), 404
 
     employee = Employee.query.filter_by(citizen_id=d).first()
+    #passkey = Passkey.query.filter_by(citizen_id = d).first()
     
     response = {
         "id": citizen.id,
         "name": citizen.citizen_name,
+        #"username": passkey.username,
         "dob": citizen.dob.strftime('%Y-%m-%d'),  # Convert Date to string
         "gender": citizen.gender,
         "household_id": citizen.household_id,
@@ -138,6 +129,38 @@ def get_citizen():
     }
 
     return jsonify(response)
+
+@app.route('/update-citizen', methods=['POST'])
+def update_citizen():
+    data = request.json
+    citizen_id = data.get("id")
+
+    if not citizen_id:
+        return jsonify({"error": "Citizen ID is required"}), 400
+
+    citizen = Citizen.query.filter_by(id=citizen_id).first()
+    #passkey = Passkey.query.filter_by(id=citizen_id).first()
+
+    if not citizen:
+        return jsonify({"error": "Citizen not found"}), 404
+
+    # Update only provided values
+    # if "username" in data and passkey:
+    #     passkey.username = data["username"]
+    # if "password" in data and passkey:
+    #     passkey.password = data["password"]
+    if "job" in data:
+        citizen.job = data["job"]
+    if "qualification" in data:
+        citizen.qualification = data["qualification"]
+
+    try:
+        db.session.commit()
+        return jsonify({"success": "Profile updated successfully!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+
 
 @app.route('/citizen')
 def home_citizen():

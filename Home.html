@@ -125,9 +125,10 @@
             })
             .then(response => response.json())
             .then(data => {
+                console.log("Response Data:", data);
                 if (data.success) {
                     alert("Login Successful!");
-                    window.location.href = "/dashboard?id={data.id}";  
+                    window.location.href = `/home?id=${data.id}`;  
                 } else {
                     alert("Error: " + data.error);
                 }

@@ -1,0 +1,31 @@
+-- Inserting parents
+INSERT INTO CITIZENS (CitizenID, FullName, DateOfBirth, Gender, ContactNumber, EducationalQualification, Job, HouseholdID) VALUES
+(1, 'Ramesh Sharma', '1965-03-10', 'Male', '9876500001', 'Graduate', 'Teacher', 201),
+(2, 'Sunita Sharma', '1970-07-15', 'Female', '9876500002', 'Post Graduate', 'Doctor', 201),
+(3, 'Mahesh Verma', '1968-12-20', 'Male', '9876500003', '12th', 'Farmer', 202),
+(4, 'Anita Verma', '1975-06-05', 'Female', '9876500004', 'Graduate', 'Housewife', 202);
+
+-- Inserting children with parent references
+INSERT INTO CITIZENS (CitizenID, FullName, DateOfBirth, Gender, ContactNumber, EducationalQualification, Job, HouseholdID, FatherID, MotherID) VALUES
+(5, 'Amit Sharma', '1990-05-12', 'Male', '9876543210', 'Post Graduate', 'Software Engineer', 201, 1, 2),
+(6, 'Priya Verma', '1995-08-25', 'Female', '9867543211', 'Graduate', 'Bank Manager', 202, 3, 4),
+(7, 'Rajesh Kumar', '1988-02-17', 'Male', '9856543222', '12th', 'Electrician', 203, NULL, NULL),
+(8, 'Sanya Mehta', '2000-11-05', 'Female', '9846543233', 'PhD', 'Professor', 204, NULL, NULL);
+
+
+INSERT INTO EMPLOYEE (EmployeeID, CitizenID, Role) VALUES
+(101, 5, 'Admin'),    
+(102, 6, 'Employee'), 
+(103, 7, 'Monitor'),  
+(104, 8, 'Employee'); 
+
+INSERT INTO USERS (UserID, Username, Password, Role, CitizenID) VALUES
+(101, 'ramesh_sharma', 'fatherpass1', 'Citizen', 1),
+(102, 'sunita_sharma', 'motherpass1', 'Citizen', 2),
+(103, 'mahesh_verma', 'fatherpass2', 'Citizen', 3),
+(104, 'anita_verma', 'motherpass2', 'Citizen', 4),
+(201, 'amit_admin', 'password123', 'Admin', 5),
+(202, 'priya_emp', 'emp456', 'Employee', 6),
+(203, 'rajesh_mon', 'mon789', 'Monitor', 7),
+(204, 'sanya_citizen', 'citizen101', 'Citizen', 8);
+

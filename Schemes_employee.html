@@ -102,14 +102,14 @@
             padding: 20px;
         }
 
-        .section {
-            margin: 20px 0;
+        .scheme-list {
+            background: white;
             padding: 15px;
-            border: 1px solid #ddd;
-            background-color: white;
             border-radius: 5px;
-            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
         }
+
     </style>
     <script>
         window.onload = function() {
@@ -123,7 +123,58 @@
                 document.getElementById("census").href = `/census?id=${id}`;
                 document.getElementById("WelSch").href = `/schemes?id=${id}`;
             }
+            loadpendingSchemesapp();
         };
+
+        function loadpendingSchemesapp() {
+            fetch("/schemes/getpendingschemes")
+            .then(response => response.json())
+            .then(data => {
+                const availableSchemes = document.getElementById("pendingSchemes");
+                availableSchemes.innerHTML = "";
+
+                if (data.length === 0) {
+                    availableSchemes.innerHTML = "<p>No pending schemes to approve.</p>";
+                    return;
+                }
+
+                // Create a form to submit selections
+                const form = document.createElement("form");
+                form.id = "schemeForm";
+
+                data.forEach(scheme => {
+                    const schemeElement = document.createElement("div");
+                    schemeElement.className = "scheme-list";
+                    schemeElement.innerHTML = `
+                        <input type="checkbox" name="Application" value="${scheme.applicationid}">
+                        <strong>${scheme.SchemeName}</strong><br>
+                        <p><b>SchemeId:</b>${scheme.schemeid}</p>
+                        <p>${scheme.Description}</p>
+                        <p><b>Eligibility:</b> ${scheme.EligibilityCriteria}</p>
+                        <p><b>Benefits:</b> ${scheme.Benefits}</p>
+                        <p><b>Department:</b> ${scheme.Department}</p>
+                        <p><b>Valid Till:</b> ${scheme.ValidTill}</p>
+                        <p><b>Citizen Id:</b> ${scheme.citizenid}</p>
+                        <b>Remarks:</b> <input type="text" name="remarks" value="${scheme.remarks}">
+                    `;
+                    form.appendChild(schemeElement);
+                });
+
+                // Add Submit Button
+                const submitButton = document.createElement("button");
+                submitButton.type = "button";
+                submitButton.innerText = "Apply for Selected Schemes";
+                submitButton.onclick = function () {
+                    applyForSchemes(id);
+                };
+
+                form.appendChild(submitButton);
+                availableSchemes.appendChild(form);
+            })
+            .catch(error => console.error("Error loading schemes:", error));
+        }
+
+        
 
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
@@ -167,22 +218,9 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <h1>Welcome, {{ username }}!</h1>
-        <p>You have access to government data and certification services.</p>
-
-        <div class="section">
-            <h2>📜 Sanction Certificates</h2>
-            <p>Approve and manage birth certificates, death certificates, and other official documents.</p>
-        </div>
-
-        <div class="section">
-            <h2>📂 View Resources</h2>
-            <p>Access various government resources available for public services and administration.</p>
-        </div>
-
-        <div class="section">
-            <h2>📊 Census Data</h2>
-            <p>Analyze and review the latest census data for policymaking and governance.</p>
+        <h3>List of all pending approval Welfare Schemes</h3>
+        <div id="pendingSchemes">
+            <p>Loading schemes...</p>
         </div>
     </div>
 

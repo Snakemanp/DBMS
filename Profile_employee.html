@@ -184,6 +184,7 @@
                 document.getElementById("certificates").href = `/certificates?id=${id}`;
                 document.getElementById("resources").href = `/resources?id=${id}`;
                 document.getElementById("census").href = `/census?id=${id}`; 
+                document.getElementById("WelSch").href = `/schemes?id=${id}`;
                 loadCitizenData(id);
             }
         };
@@ -285,6 +286,7 @@
         <a id="certificates" href="/certificates">📜 Sanction Certificates</a>
         <a id="resources" href="/resources">📂 View Resources</a>
         <a id="census" href="/census">📊 Census Data</a>
+        <a id="WelSch" href="/">💰 Pending Schemes</a>
     </div>
 
     <!-- Loading Message -->

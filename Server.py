@@ -67,6 +67,25 @@ class Schemeapp(db.Model):
     status = db.Column(db.Boolean, nullable=False, default=False)
     remarks = db.Column(db.Text)
 
+class AgriculturalLand(db.Model):
+    __tablename__ = 'agriculturalland'
+    landid = db.Column(db.Integer, primary_key=True)
+    citizenid = db.Column(db.Integer, db.ForeignKey('citizens.citizenid', ondelete='CASCADE'), nullable=False)
+    area = db.Column(db.Float, nullable=False)
+    address = db.Column(db.String(255), nullable=False)
+
+class CultivationRecord(db.Model):
+    __tablename__ = 'cultivationrecord'
+    cultivationid = db.Column(db.Integer, primary_key=True)
+    landid = db.Column(db.Integer, db.ForeignKey('agriculturalland.landid', ondelete='CASCADE') , nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    citizenid = db.Column(db.Integer, db.ForeignKey('citizens.citizenid', ondelete='CASCADE'), nullable=False)
+    season = db.Column(db.String(50), nullable=False)
+    croptype = db.Column(db.String(100), nullable=False)
+    cultivatedarea = db.Column(db.Float, nullable=False)
+    productionquantity = db.Column(db.Float)
+
+
 @app.route('/')
 def login_page():
     return send_file("Home.html")
@@ -171,7 +190,7 @@ def scheme():
     if not citizen:
         return "User not found", 404
 
-    return send_file("Home_employee.html" if employee else "Schemes_citizen.html")
+    return send_file("Schemes_employee.html" if employee else "Schemes_citizen.html")
 
 @app.route('/schemes/getschemes')
 def getscheme():
@@ -220,6 +239,31 @@ def getscheme():
 
     return jsonify(schemes)
 
+@app.route('/schemes/getpendingschemes')
+def getpendingscheme():
+    schemes = []
+    pending_schemes = (
+            db.session.query(Scheme, Schemeapp.remarks,Schemeapp.citizenid,Schemeapp.applicationid)
+            .join(Schemeapp, Scheme.schemeid == Schemeapp.schemeid)
+            .filter(Schemeapp.status == False)
+            .all()
+        )
+    for scheme,remarks, citizenid,applicationid in pending_schemes:
+            schemes.append({
+                "schemeid": scheme.schemeid,
+                "applicationid": applicationid,
+                "SchemeName": scheme.schemename,
+                "Description": scheme.description,
+                "EligibilityCriteria": scheme.eligibilitycriteria,
+                "Benefits": scheme.benefits,
+                "Department": scheme.department,
+                "ValidTill": scheme.validtill.strftime('%Y-%m-%d'),
+                "citizenid": citizenid,
+                "remarks": remarks
+            })
+    return jsonify(schemes)
+    
+
 @app.route('/applyschemes', methods=['POST'])
 def apply_schemes():
     data = request.json
@@ -263,6 +307,62 @@ def agripage():
         return "User not found", 404
 
     return send_file("Agri_citizen.html")
+
+@app.route('/farmland', methods=['GET'])
+def get_farmlands():
+    """Fetch all farmland owned by a user."""
+    userid = request.args.get('userid', type=int)
+    if not userid:
+        return jsonify({"error": "User ID is required"}), 400
+
+    lands = AgriculturalLand.query.filter_by(citizenid=userid).all()
+    return jsonify([{
+        "landid": land.landid,
+        "Area": land.area,
+        "Address": land.address
+    } for land in lands])
+
+@app.route('/cultivationrecords', methods=['GET'])
+def get_cultivation_records():
+    """Fetch all cultivation records for the user's farmlands."""
+    userid = request.args.get('userid', type=int)
+    if not userid:
+        return jsonify({"error": "User ID is required"}), 400
+
+    records = db.session.query(CultivationRecord).join(AgriculturalLand).filter(AgriculturalLand.citizenid == userid).all()
+    return jsonify([{
+        "cultivationid": record.cultivationid,
+        "landid": record.landid,
+        "year": record.year,
+        "season": record.season,
+        "croptype": record.croptype,
+        "cultivatedarea": record.cultivatedarea,
+        "productionquantity": record.productionquantity
+    } for record in records])
+
+@app.route('/addcultivation', methods=['POST'])
+def add_cultivation():
+    """Add a cultivation record."""
+    data = request.json
+    required_fields = ["landid", "year", "season", "croptype", "cultivatedarea", "productionquantity", "citizenid"]
+
+    if not all(field in data for field in required_fields):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    new_record = CultivationRecord(
+        landid=data['landid'],
+        year=data['year'],
+        season=data['season'],
+        croptype=data['croptype'],
+        cultivatedarea=data['cultivatedarea'],
+        productionquantity=data['productionquantity'],
+        citizenid=data['citizenid']
+    )
+
+    db.session.add(new_record)
+    db.session.commit()
+
+    return jsonify({"message": "Cultivation record added successfully!"}), 201
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5173, debug=True)

@@ -102,22 +102,13 @@
             padding: 20px;
         }
 
-        .record-container {
-            background: white;
+        .section {
+            margin: 20px 0;
             padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column; /* Each column takes a new row */
-            gap: 8px;
-        }
-
-        .record-container div {
-            padding: 8px;
-            background: #f9f9f9;
+            border: 1px solid #ddd;
+            background-color: white;
             border-radius: 5px;
-            font-size: 16px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
         }
     </style>
     <script>
@@ -131,74 +122,9 @@
                 document.getElementById("census").href = `/census?id=${id}&monitor=${true}`;
                 document.getElementById("WelSch").href = `/schemes?id=${id}&monitor=${true}`;
                 document.getElementById("agri").href = `/agrirecords?id=${id}&monitor=${true}`;
-                getFarmlands(id);
-                getcropdata(id);
             }
+            loadResources();
         };
-
-        function getFarmlands(userId) {
-            if (!userId) {
-                alert("User ID is missing!");
-                return;
-            }
-    
-            fetch(`/farmland?userid=${userId}&monitor=${true}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Network response was not ok");
-                    }
-                    return response.json();
-                })
-                .then(farmlands => {
-                    let farmlandList = `<div class="section"><h3>Citizen Farmlands</h3><ul>`;
-                    farmlands.forEach(farm => {
-                        farmlandList += 
-                                `<li class="record-container">
-                                    <div><strong>CitizenID:</strong> ${farm.citizenid}</div>
-                                    <div><strong>Citizen Name:</strong> ${farm.citizenname} acres</div>
-                                    <div><strong>Address:</strong> ${farm.TotalFarmland}</div>
-                                </li>`;
-                    });
-                    farmlandList += "</ul>";
-                    document.querySelector(".main-content").innerHTML = farmlandList;
-                })
-                .catch(error => {
-                    console.error("Error fetching farmlands:", error);
-                    alert("Failed to fetch farmlands: " + error.message);
-                    // Show error in the main content
-                    document.querySelector(".main-content").innerHTML = 
-                        "<h3>Error Loading Farmlands</h3><p>There was a problem loading farmland data. Please try again later.</p>";
-                });
-        }
-
-        function getcropdata(userId){
-            if (!userId) {
-                alert("User ID is missing!");
-                return;
-            }
-            fetch(`/cultivationrecords?userid=${userId}&monitor=${true}`)
-                .then(response => response.json())
-                .then(records => {
-                    let recordList = `<div class="section"><h3>Cultivation Records</h3><ul>`;
-                    records.forEach(record => {
-                        recordList += `
-                        <li class="record-container">
-                            <div><strong>Year:</strong> ${record.year}</div>
-                            <div><strong>Season:</strong> ${record.season}</div>
-                            <div><strong>Crop:</strong> ${record.croptype}</div>
-                            <div><strong>Area:</strong> ${record.TotalCultivatedArea} acres</div>
-                            <div><strong>Production:</strong> ${record.TotalProductionQuantity} kg</div>
-                        </li>`;
-
-                    });
-                    recordList += "</ul></div>";
-                    document.querySelector(".main-content").innerHTML = recordList;
-                })
-                .catch(error => {
-                    console.error("Error fetching cultivation records:", error);
-                    alert("Failed to fetch cultivation records.");
-                });
-        }
 
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
@@ -216,6 +142,29 @@
         function closeSidebar() {
             document.querySelector('.sidebar').classList.remove('open');
             document.querySelector('.overlay').classList.remove('active');
+        }
+
+        function loadResources() {
+            fetch('/api/resources')
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.getElementById("resourcesTable");
+                    table.innerHTML = ""; // Clear previous data
+
+                    data.forEach(resource => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${resource.id}</td>
+                            <td>${resource.type}</td>
+                            <td>${resource.location}</td>
+                            <td>${resource.installationdate}</td>
+                            <td>${resource.condition}</td>
+                            <td>${resource.lastmaintenancedate}</td>
+                        `;
+                        table.appendChild(row);
+                    });
+                })
+                .catch(error => console.error("Error loading resources:", error));
         }
     </script>
 </head>

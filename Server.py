@@ -415,22 +415,18 @@ def get_farmlands():
     is_monitor = request.args.get('monitor', default="false").lower() == "true"
     if is_monitor:
         # Fetch citizen details and total farmland area
-        user = db.session.query(
+        users = db.session.query(
             Citizen.citizenid,
-            Citizen.name.label("citizenname"),
+            Citizen.fullname.label("citizenname"),
             func.sum(AgriculturalLand.area).label("TotalFarmland")
-        ).join(AgriculturalLand, Citizen.citizenid == AgriculturalLand.citizenid) \
-         .filter(Citizen.citizenid == userid) \
-         .group_by(Citizen.citizenid).first()
+        ).join(AgriculturalLand, Citizen)\
+         .group_by(Citizen.citizenid)
 
-        if not user:
-            return jsonify({"error": "User not found or has no farmland"}), 404
-
-        return jsonify({
+        return jsonify([{
             "citizenid": user.citizenid,
             "citizenname": user.citizenname,
             "TotalFarmland": user.TotalFarmland
-        })
+        } for user in users])
       
     if not userid:
         return jsonify({"error": "User ID is required"}), 400

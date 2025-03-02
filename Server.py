@@ -678,6 +678,9 @@ def update_service_request(requestid):
 @app.route('/census')
 def census_page():
     d = request.args.get('id', type=int)
+    is_monitor = request.args.get('monitor', default="false").lower() == "true"
+    if is_monitor:
+        return send_file('Census_monitor.html')
     employee = Employee.query.filter_by(citizenid = d).first()
     if not employee:
         return "User not found", 404

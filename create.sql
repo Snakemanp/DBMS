@@ -8,8 +8,8 @@ DROP TABLE IF EXISTS agriculturalland;
 DROP TABLE IF EXISTS servicerequests;
 DROP TABLE IF EXISTS households;
 DROP TABLE IF EXISTS censusdata;
-DROP TABLE IF EXISTS citizens;
 DROP TABLE IF EXISTS vaccinations;
+DROP TABLE IF EXISTS citizens;
 
 CREATE TABLE citizens (
     citizenid  SERIAL PRIMARY KEY,

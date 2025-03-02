@@ -20,8 +20,8 @@ INSERT INTO EMPLOYEE ( CitizenID, Role) VALUES
 (8, 'Health Officer'); 
 
 INSERT INTO USERS ( Username, Password, Role, CitizenID) VALUES
-('ramesh_sharma', 'fatherpass1', 'Citizen', 1),
 ('sunita_sharma', 'motherpass1', 'Citizen', 2),
+('ramesh_sharma', 'fatherpass1', 'Citizen', 1),
 ('mahesh_verma', 'fatherpass2', 'Citizen', 3),
 ('anita_verma', 'motherpass2', 'Citizen', 4),
 ('amit_admin', 'password123', 'Employee', 5),

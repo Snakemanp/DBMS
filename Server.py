@@ -168,12 +168,11 @@ def home():
         return render_template("Home_monitor.html",username=user.username)
 
     citizen = Citizen.query.filter_by(citizenid=user.citizenid).first()
-    employee = Employee.query.filter_by(citizenid=user.citizenid).first()
     
     if not citizen:
         return "User not found", 404
     
-    return render_template("Home_employee.html" if employee else "Home_citizen.html", username=citizen.fullname)
+    return render_template("Home_employee.html" if user.role == 'Employee' else "Home_citizen.html", username=citizen.fullname)
 
 @app.route('/profile')
 def profile():
@@ -182,13 +181,7 @@ def profile():
     if user.role == 'Monitor':
         return send_file("Profile_monitor.html")
     
-    citizen = Citizen.query.filter_by(citizenid=user.citizenid).first()
-    employee = Employee.query.filter_by(citizenid=user.citizenid).first()
-    
-    if not citizen:
-        return "User not found", 404
-    
-    return send_file("Profile_employee.html" if employee else "Profile_citizen.html")
+    return send_file("Profile_employee.html" if user.role == 'Employee' else "Profile_citizen.html")
 
 @app.route('/get-citizen')
 def get_citizen():
@@ -271,14 +264,8 @@ def scheme():
     user = User.query.filter_by(userid = userid_).first()
     if user.role == 'Monitor':
         return send_file("Schemes_monitor.html")
-    
-    citizen = Citizen.query.filter_by(citizenid=user.citizenid).first()
-    employee = Employee.query.filter_by(citizenid=user.citizenid).first()
-    
-    if not citizen:
-        return "User not found", 404
 
-    return send_file("Schemes_employee.html" if employee else "Schemes_citizen.html")
+    return send_file("Schemes_employee.html" if user.role == 'Employee' else "Schemes_citizen.html")
 
 @app.route('/schemes/getschemes')
 def getscheme():
@@ -429,9 +416,6 @@ def agripage():
     user = User.query.filter_by(userid = userid_).first()
     if user.role == 'Monitor':
         return send_file("Agri_monitor.html")
-    citizen = Citizen.query.filter_by(citizenid=user.citizenid).first()
-    if not citizen:
-        return "User not found", 404
 
     return send_file("Agri_citizen.html")
 
@@ -542,12 +526,7 @@ def resources_page():
     is_monitor = request.args.get('monitor', default="false").lower() == "true"
     if is_monitor:
         return send_file("Resources_monitor.html")
-    userid_ = request.args.get('id', type=int)
-    user = User.query.filter_by(userid = userid_).first()
-    employee = Employee.query.filter_by(citizenid = user.citizenid).first()
-    if not employee:
-        return "User not found", 404
-    print("Sent")
+    
     return send_file('Resources_employee.html')
 
 @app.route('/api/resources', methods=['GET'])
@@ -589,10 +568,6 @@ def delete_resource(assetid):
 
 @app.route('/services')
 def citizenrequests_page():
-    userid_ = request.args.get('id', type=int)
-    citizen = Citizen.query.first()
-    if not citizen:
-        return "User not found", 404
     return send_file('Services_citizen.html')
 
 @app.route('/api/citizenrequests', methods=['GET'])
@@ -639,11 +614,6 @@ def add_service_request():
 
 @app.route('/servicerequests')
 def servicerequests_page():
-    userid_ = request.args.get('id', type=int)
-    user = User.query.filter_by(userid = userid_).first()
-    employee = Employee.query.filter_by(citizenid = user.citizenid).first()
-    if not employee:
-        return "User not found", 404
     return send_file('Services_employee.html')
 
 @app.route('/api/servicerequests', methods=['GET'])
@@ -690,11 +660,7 @@ def vaccinations_page():
     is_monitor = request.args.get('monitor', default="false").lower() == "true"
     if is_monitor:
         return send_file("Vaccinations_monitor.html")
-    userid_ = request.args.get('id', type=int)
-    user = User.query.filter_by(userid = userid_).first()
-    employee = Employee.query.filter_by(citizenid = user.citizenid).first()
-    if not employee:
-        return "User not found", 404
+    
     return send_file('Vaccinations_employee.html')
 
 @app.route('/api/vaccinations', methods=['GET'])
@@ -746,9 +712,7 @@ def census_page():
     is_monitor = request.args.get('monitor', default="false").lower() == "true"
     if is_monitor:
         return send_file('Census_monitor.html')
-    employee = Employee.query.filter_by(citizenid = user.citizenid).first()
-    if not employee:
-        return "User not found", 404
+    
     return send_file('Census_data.html')
 
 @app.route('/api/census', methods=['POST'])
@@ -774,11 +738,7 @@ def add_census_data():
 
 @app.route('/censusreport')
 def census_report_page():
-    userid_ = request.args.get('id', type=int)
-    user = User.query.filter_by(userid = userid_).first()
-    employee = Employee.query.filter_by(citizenid = user.citizenid).first()
-    if not employee:
-        return "User not found", 404
+    
     return send_file('Census_report.html')
 
 @app.route('/api/censusreport')

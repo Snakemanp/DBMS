@@ -143,6 +143,7 @@
                 form.id = "schemeForm";
 
                 data.forEach(scheme => {
+                    scheme.status=false;
                     const schemeElement = document.createElement("div");
                     schemeElement.className = "scheme-list";
                     schemeElement.innerHTML = `
@@ -156,10 +157,10 @@
                         <p><b>Valid Till:</b> ${scheme.ValidTill}</p>
                         <p><b>Citizen Id:</b> ${scheme.citizenid}</p>
                         <b>Remarks:</b> <input type="text" name="remarks" value="${scheme.remarks}">
+                        <b>Approve:</b> <input type="checkbox" name="Approve">
                     `;
                     form.appendChild(schemeElement);
                 });
-
                 // Add Submit Button
                 const submitButton = document.createElement("button");
                 submitButton.type = "button";
@@ -174,7 +175,47 @@
             .catch(error => console.error("Error loading schemes:", error));
         }
 
-        
+        function updateScheme() {
+            const updatedSchemes = [];
+            const checkboxes = document.querySelectorAll("input[name='Application']:checked");
+
+            checkboxes.forEach(checkbox => {
+                const applicationId = checkbox.value;
+                const approveCheckbox = checkbox.parentElement.querySelector("input[name='Approve']");
+                const remarksInput = checkbox.parentElement.querySelector("input[name='remarks']");
+
+                let remarks = remarksInput.value;
+                let status = false;
+                
+                if (approveCheckbox.checked) {
+                    remarks = "Approved";
+                    status = true;
+                }
+
+                updatedSchemes.push({
+                applicationid: applicationId,
+                remarks: remarks,
+                status: status
+                });
+            });
+
+            // Send updated schemes to the backend
+            fetch("/schemes/update", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(updatedSchemes)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Update successful:", data);
+                alert("Schemes updated successfully!");
+            })
+            .catch(error => {
+                console.error("Error updating schemes:", error);
+            });
+        }
 
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');

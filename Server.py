@@ -511,7 +511,7 @@ def add_cultivation():
 def resources_page():
     is_monitor = request.args.get('monitor', default="false").lower() == "true"
     if is_monitor:
-        return send_file("Resources_moniter.html")
+        return send_file("Resources_monitor.html")
     d = request.args.get('id', type=int)
     employee = Employee.query.filter_by(citizenid = d).first()
     if not employee:

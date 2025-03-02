@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, send_file, request, render_template
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from datetime import datetime
 from sqlalchemy import func, extract, case
 from datetime import datetime, timedelta
@@ -398,6 +399,9 @@ def apply_schemes():
 @app.route('/agrirecords')
 def agripage():
     userid = request.args.get('id', type=int)
+    is_monitor = request.args.get('monitor', default="false").lower() == "true"
+    if is_monitor:
+        return send_file("Agri_monitor.html")
     citizen = Citizen.query.filter_by(citizenid=userid).first()
     if not citizen:
         return "User not found", 404
@@ -408,6 +412,26 @@ def agripage():
 def get_farmlands():
     """Fetch all farmland owned by a user."""
     userid = request.args.get('userid', type=int)
+    is_monitor = request.args.get('monitor', default="false").lower() == "true"
+    if is_monitor:
+        # Fetch citizen details and total farmland area
+        user = db.session.query(
+            Citizen.citizenid,
+            Citizen.name.label("citizenname"),
+            func.sum(AgriculturalLand.area).label("TotalFarmland")
+        ).join(AgriculturalLand, Citizen.citizenid == AgriculturalLand.citizenid) \
+         .filter(Citizen.citizenid == userid) \
+         .group_by(Citizen.citizenid).first()
+
+        if not user:
+            return jsonify({"error": "User not found or has no farmland"}), 404
+
+        return jsonify({
+            "citizenid": user.citizenid,
+            "citizenname": user.citizenname,
+            "TotalFarmland": user.TotalFarmland
+        })
+      
     if not userid:
         return jsonify({"error": "User ID is required"}), 400
 
@@ -422,6 +446,31 @@ def get_farmlands():
 def get_cultivation_records():
     """Fetch all cultivation records for the user's farmlands."""
     userid = request.args.get('userid', type=int)
+    is_monitor = request.args.get('monitor', default="false").lower() == "true"
+    if is_monitor:
+        # Aggregate data grouped by year, season, and croptype
+        results = db.session.query(
+            CultivationRecord.year,
+            CultivationRecord.season,
+            CultivationRecord.croptype,
+            func.sum(CultivationRecord.cultivatedarea).label("TotalCultivatedArea"),
+            func.sum(CultivationRecord.productionquantity).label("TotalProductionQuantity")
+        ).group_by(CultivationRecord.year, CultivationRecord.season, CultivationRecord.croptype).all()
+
+        if not results:
+            return jsonify({"error": "No cultivation records found"}), 404
+
+        return jsonify([
+            {
+                "year": result.year,
+                "season": result.season,
+                "croptype": result.croptype,
+                "TotalCultivatedArea": result.TotalCultivatedArea,
+                "TotalProductionQuantity": result.TotalProductionQuantity
+            }
+            for result in results
+        ])
+
     if not userid:
         return jsonify({"error": "User ID is required"}), 400
 

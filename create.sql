@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS employee;   
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS assets;
+<<<<<<< HEAD
 DROP TABLE IF EXISTS welfarescheme;
 DROP TABLE IF EXISTS schemeapplication;
 DROP TABLE IF EXISTS agriculturalland;
@@ -8,6 +9,16 @@ DROP TABLE IF EXISTS cultivationrecord;
 DROP TABLE IF EXISTS servicerequests;
 DROP TABLE IF EXISTS citizens;
 DROP TABLE IF EXISTS households;
+=======
+DROP TABLE IF EXISTS schemeapplication;
+DROP TABLE IF EXISTS welfarescheme;
+DROP TABLE IF EXISTS cultivationrecord;
+DROP TABLE IF EXISTS agriculturalland;
+DROP TABLE IF EXISTS servicerequests;
+DROP TABLE IF EXISTS households;
+DROP TABLE IF EXISTS censusdata;
+DROP TABLE IF EXISTS citizens;
+>>>>>>> be62314 (Fourth commit)
 
 CREATE TABLE citizens (
     citizenid  SERIAL PRIMARY KEY,

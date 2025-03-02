@@ -122,83 +122,75 @@
     </style>
     <script>
         window.onload = function() {
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get("id");
-            if (id) {
-                document.getElementById("home").href = `/home?id=${id}&monitor=${true}`;
-                document.getElementById("profile").href = `/profile?id=${id}&monitor=${true}`;
-                document.getElementById("resources").href = `/resources?id=${id}&monitor=${true}`;
-                document.getElementById("census").href = `/census?id=${id}&monitor=${true}`;
-                document.getElementById("WelSch").href = `/schemes?id=${id}&monitor=${true}`;
-                document.getElementById("agri").href = `/agrirecords?id=${id}&monitor=${true}`;
-                getFarmlands(id);
-                getcropdata(id);
-            }
-        };
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+    if (id) {
+        document.getElementById("home").href = `/home?id=${id}&monitor=${true}`;
+        document.getElementById("profile").href = `/profile?id=${id}&monitor=${true}`;
+        document.getElementById("resources").href = `/resources?id=${id}&monitor=${true}`;
+        document.getElementById("census").href = `/census?id=${id}&monitor=${true}`;
+        document.getElementById("WelSch").href = `/schemes?id=${id}&monitor=${true}`;
+        document.getElementById("agri").href = `/agrirecords?id=${id}&monitor=${true}`;
+        
+        // Fetch both data sets
+        fetchFarmlandAndCrops(id);
+    }
+};
 
-        function getFarmlands(userId) {
-            if (!userId) {
-                alert("User ID is missing!");
-                return;
-            }
-    
-            fetch(`/farmland?userid=${userId}&monitor=${true}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Network response was not ok");
-                    }
-                    return response.json();
-                })
-                .then(farmlands => {
-                    let farmlandList = `<div class="section"><h3>Citizen Farmlands</h3><ul>`;
-                    farmlands.forEach(farm => {
-                        farmlandList += 
-                                `<li class="record-container">
-                                    <div><strong>CitizenID:</strong> ${farm.citizenid}</div>
-                                    <div><strong>Citizen Name:</strong> ${farm.citizenname} acres</div>
-                                    <div><strong>Address:</strong> ${farm.TotalFarmland}</div>
-                                </li>`;
-                    });
-                    farmlandList += "</ul>";
-                    document.querySelector(".main-content").innerHTML = farmlandList;
-                })
-                .catch(error => {
-                    console.error("Error fetching farmlands:", error);
-                    alert("Failed to fetch farmlands: " + error.message);
-                    // Show error in the main content
-                    document.querySelector(".main-content").innerHTML = 
-                        "<h3>Error Loading Farmlands</h3><p>There was a problem loading farmland data. Please try again later.</p>";
-                });
-        }
+function fetchFarmlandAndCrops(userId) {
+    if (!userId) {
+        alert("User ID is missing!");
+        return;
+    }
 
-        function getcropdata(userId){
-            if (!userId) {
-                alert("User ID is missing!");
-                return;
-            }
-            fetch(`/cultivationrecords?userid=${userId}&monitor=${true}`)
-                .then(response => response.json())
-                .then(records => {
-                    let recordList = `<div class="section"><h3>Cultivation Records</h3><ul>`;
-                    records.forEach(record => {
-                        recordList += `
-                        <li class="record-container">
-                            <div><strong>Year:</strong> ${record.year}</div>
-                            <div><strong>Season:</strong> ${record.season}</div>
-                            <div><strong>Crop:</strong> ${record.croptype}</div>
-                            <div><strong>Area:</strong> ${record.TotalCultivatedArea} acres</div>
-                            <div><strong>Production:</strong> ${record.TotalProductionQuantity} kg</div>
-                        </li>`;
+    // Select main content div
+    const mainContent = document.querySelector(".main-content");
+    mainContent.innerHTML = ""; // Clear previous content
 
-                    });
-                    recordList += "</ul></div>";
-                    document.querySelector(".main-content").innerHTML = recordList;
-                })
-                .catch(error => {
-                    console.error("Error fetching cultivation records:", error);
-                    alert("Failed to fetch cultivation records.");
-                });
-        }
+    // Fetch Farmland Data
+    fetch(`/farmland?userid=${userId}&monitor=${true}`)
+        .then(response => response.json())
+        .then(farmlands => {
+            let farmlandList = `<div class="section"><h3>Citizen Farmlands</h3><ul>`;
+            farmlands.forEach(farm => {
+                farmlandList += `
+                    <li class="record-container">
+                        <div><strong>Citizen ID:</strong> ${farm.citizenid}</div>
+                        <div><strong>Citizen Name:</strong> ${farm.citizenname}</div>
+                        <div><strong>Total Farmland:</strong> ${farm.TotalFarmland} acres</div>
+                    </li>`;
+            });
+            farmlandList += "</ul></div>";
+            mainContent.innerHTML += farmlandList; // Append to main content
+        })
+        .catch(error => {
+            console.error("Error fetching farmlands:", error);
+            mainContent.innerHTML += `<h3>Error Loading Farmlands</h3><p>Failed to fetch farmland data.</p>`;
+        });
+
+    // Fetch Cultivation Data
+    fetch(`/cultivationrecords?userid=${userId}&monitor=${true}`)
+        .then(response => response.json())
+        .then(records => {
+            let recordList = `<div class="section"><h3>Cultivation Records</h3><ul>`;
+            records.forEach(record => {
+                recordList += `
+                    <li class="record-container">
+                        <div><strong>Year:</strong> ${record.year}</div>
+                        <div><strong>Season:</strong> ${record.season}</div>
+                        <div><strong>Crop:</strong> ${record.croptype}</div>
+                        <div><strong>Area:</strong> ${record.TotalCultivatedArea} acres</div>
+                        <div><strong>Production:</strong> ${record.TotalProductionQuantity} kg</div>
+                    </li>`;
+            });
+            recordList += "</ul></div>";
+            mainContent.innerHTML += recordList; // Append cultivation records
+        })
+        .catch(error => {
+            console.error("Error fetching cultivation records:", error);
+            mainContent.innerHTML += `<h3>Error Loading Cultivation Records</h3><p>Failed to fetch cultivation records.</p>`;
+        });
+}
 
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
@@ -217,6 +209,7 @@
             document.querySelector('.sidebar').classList.remove('open');
             document.querySelector('.overlay').classList.remove('active');
         }
+
     </script>
 </head>
 <body>

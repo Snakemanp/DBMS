@@ -121,6 +121,7 @@
                 document.getElementById("census").href = `/census?id=${id}&monitor=${true}`;
                 document.getElementById("WelSch").href = `/schemes?id=${id}&monitor=${true}`;
                 document.getElementById("agri").href = `/agrirecords?id=${id}&monitor=${true}`;
+                loadAllSchemes(id);
             }
         };
 
@@ -164,7 +165,6 @@
                     const schemeElement = document.createElement("div");
                     schemeElement.className = "scheme-list";
                     schemeElement.innerHTML = `
-                        <input type="checkbox" name="scheme" value="${scheme.schemeid}">
                         <strong>${scheme.SchemeName}</strong><br>
                         <p>${scheme.Description}</p>
                         <p><b>No Participants:</b> ${scheme.Participants}</p>
@@ -172,15 +172,6 @@
                     form.appendChild(schemeElement);
                 });
 
-                // Add Submit Button
-                const submitButton = document.createElement("button");
-                submitButton.type = "button";
-                submitButton.innerText = "Apply for Selected Schemes";
-                submitButton.onclick = function () {
-                    applyForSchemes(id);
-                };
-
-                form.appendChild(submitButton);
                 availableSchemes.appendChild(form);
             })
             .catch(error => console.error("Error loading schemes:", error));

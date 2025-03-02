@@ -443,7 +443,7 @@ def get_farmlands():
             Citizen.citizenid,
             Citizen.fullname.label("citizenname"),
             func.sum(AgriculturalLand.area).label("TotalFarmland")
-        ).join(AgriculturalLand, Citizen)\
+        ).join(AgriculturalLand,Citizen.citizenid == AgriculturalLand.citizenid)\
          .group_by(Citizen.citizenid)
 
         return jsonify([{

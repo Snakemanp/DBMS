@@ -154,8 +154,11 @@ def login():
     user = User.query.filter_by(username=data['username']).first()
     if not user or user.password != data['password']:
         return jsonify({'error': 'Invalid username or password'}), 401
-    
-    return jsonify({'id': user.userid, 'success': True})
+    if user.role == 'Admin':
+        return jsonify({'Admin': True, 'success': True,'password': password_admin})
+    if user.role == 'Monitor':
+        return jsonify({'id': user.userid, 'success': True,'Monitor':True})        
+    return jsonify({'id': user.userid, 'success': True,})
 
 @app.route('/home')
 def home():

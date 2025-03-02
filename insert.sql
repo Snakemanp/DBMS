@@ -14,20 +14,20 @@ INSERT INTO CITIZENS (CitizenID, FullName, DateOfBirth, Gender, ContactNumber, E
 
 
 INSERT INTO EMPLOYEE (EmployeeID, CitizenID, Role) VALUES
-(101, 5, 'Admin'),    
-(102, 6, 'Employee'), 
-(103, 7, 'Monitor'),  
-(104, 8, 'Employee'); 
+(101, 5, 'Sarpanch'),         
+(102, 6, 'Secretary'),        
+(103, 7, 'Surveyor'),        
+(104, 8, 'Health Officer'); 
 
 INSERT INTO USERS (UserID, Username, Password, Role, CitizenID) VALUES
 (101, 'ramesh_sharma', 'fatherpass1', 'Citizen', 1),
 (102, 'sunita_sharma', 'motherpass1', 'Citizen', 2),
 (103, 'mahesh_verma', 'fatherpass2', 'Citizen', 3),
 (104, 'anita_verma', 'motherpass2', 'Citizen', 4),
-(201, 'amit_admin', 'password123', 'Admin', 5),
+(201, 'amit_admin', 'password123', 'Employee', 5),
 (202, 'priya_emp', 'emp456', 'Employee', 6),
-(203, 'rajesh_mon', 'mon789', 'Monitor', 7),
-(204, 'sanya_citizen', 'citizen101', 'Citizen', 8);
+(203, 'rajesh_mon', 'mon789', 'Employee', 7),
+(204, 'sanya_citizen', 'citizen101', 'Employee', 8);
 
 INSERT INTO ASSETS (AssetID, Type, Location, InstallationDate, Condition, LastMaintenanceDate) VALUES
 (1, 'Water Pump', 'Village A', '2018-06-15', 'Good', '2023-07-10'),

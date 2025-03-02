@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Resources</title>
+    <title>Service Requests</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -101,43 +101,6 @@
             padding: 20px;
         }
 
-        /* Form Styling */
-        .formcontainer {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-            width: 50%;
-            margin: 20px auto;
-        }
-
-        label {
-            font-weight: bold;
-            display: block;
-            margin: 10px 0 5px;
-        }
-
-        select, input, button {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-
-        button {
-            background: #28a745;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        button:hover {
-            background: #218838;
-        }
-
         /* Table Styling */
         table {
             width: 100%;
@@ -162,7 +125,21 @@
             background: #f1f1f1;
         }
 
-        .deletebtn {
+        .approvebtn {
+            background: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .approvebtn:hover {
+            background: #218838;
+        }
+
+        .rejectbtn {
             background: #dc3545;
             color: white;
             padding: 5px 10px;
@@ -172,7 +149,7 @@
             transition: 0.3s;
         }
 
-        .deletebtn:hover {
+        .rejectbtn:hover {
             background: #c82333;
         }
     </style>
@@ -184,66 +161,49 @@
             if (id) {
                 document.getElementById("home").href = `/home?id=${id}`;
                 document.getElementById("profile").href = `/profile?id=${id}`;
-                document.getElementById("resources").href = `/resources?id=${id}`;
-                loadResources();
+                document.getElementById("servicerequests").href = `/servicerequests?id=${id}`;
+                loadRequests();
             }
         };
 
-        function loadResources() {
-            fetch('/api/resources')
+        function loadRequests() {
+            fetch('/api/servicerequests')
                 .then(response => response.json())
                 .then(data => {
-                    const table = document.getElementById("resourcesTable");
+                    const table = document.getElementById("requestsTable");
                     table.innerHTML = ""; // Clear previous data
 
-                    data.forEach(resource => {
+                    data.forEach(request => {
                         const row = document.createElement("tr");
                         row.innerHTML = `
-                            <td>${resource.id}</td>
-                            <td>${resource.type}</td>
-                            <td>${resource.location}</td>
-                            <td>${resource.installationdate}</td>
-                            <td>${resource.condition}</td>
-                            <td>${resource.lastmaintenancedate}</td>
-                            <td><button class="deletebtn" onclick="deleteResource(${resource.id})">Delete</button></td>
+                            <td>${request.requestid}</td>
+                            <td>${request.citizenname}</td>
+                            <td>${request.requesttype}</td>
+                            <td>${request.requestdate}</td>
+                            <td>${request.status}</td>
+                            <td>
+                                <button class="approvebtn" onclick="updateRequest(${request.requestid}, 'approved')">Approve</button>
+                                <button class="rejectbtn" onclick="updateRequest(${request.requestid}, 'rejected')">Reject</button>
+                            </td>
                         `;
                         table.appendChild(row);
                     });
                 })
-                .catch(error => console.error("Error loading resources:", error));
+                .catch(error => console.error("Error loading service requests:", error));
         }
 
-        function addResource() {
-            console.log("hi");
-            const resourceData = {
-                type: document.getElementById("resourcetype").value,
-                location: document.getElementById("location").value,
-                installationdate: document.getElementById("installationdate").value,
-                condition: document.getElementById("condition").value,
-                lastmaintenancedate: new Date().toISOString().split('T')[0]
-            };
-            console.log(resourceData);
-            fetch('/api/resources', {
-                method: 'POST',
+        function updateRequest(requestid, status) {
+            fetch(`/api/servicerequests/${requestid}`, {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(resourceData)
+                body: JSON.stringify({ status: status })
             })
             .then(response => response.json())
             .then(data => {
                 alert(data.message);
-                loadResources(); // Refresh list
+                loadRequests(); // Refresh list
             })
-            .catch(error => console.error("Error adding resource:", error));
-        }
-
-        function deleteResource(assetid) {
-            fetch(`/api/resources/${assetid}`, { method: 'DELETE' })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    loadResources(); // Refresh list
-                })
-                .catch(error => console.error("Error deleting resource:", error));
+            .catch(error => console.error("Error updating request:", error));
         }
 
         function toggleSidebar() {
@@ -275,51 +235,25 @@
     <div class="sidebar">
         <a id="home" href="/">🏠 Home</a>
         <a id="profile" href="/">👤 Profile</a>
-        <a id="resources" href="/">🛠 Resources</a>
+        <a id="servicerequests" href="/">📑 Service Requests</a>
     </div>
 
     <!-- Main Content -->
     <div class="maincontent">
-        <h1>Manage Resources</h1>
-
-        <div class="formcontainer">
-            <form>
-                <label>Resource Type:</label>
-                <select id="resourcetype">
-                    <option value="Street Light">Street Light</option>
-                    <option value="Water Tank">Water Tank</option>
-                    <option value="Road">Road</option>
-                    <option value="Park">Park</option>
-                    <option value="Public Toilet">Public Toilet</option>
-                </select>
-                <label>Location:</label>
-                <input type="text" id="location">
-                <label>Installation Date:</label>
-                <input type="date" id="installationdate">
-                <label>Condition:</label>
-                <select id="condition">
-                    <option value="Good">Good</option>
-                    <option value="Needs Repair">Needs Repair</option>
-                    <option value="Replaced">Replaced</option>
-                    <option value="Damaged">Damaged</option>
-                </select>
-                <button type="button" onclick="addResource()">Add Resource</button>
-            </form>
-        </div>
+        <h1>Manage Service Requests</h1>
 
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Type</th>
-                    <th>Location</th>
-                    <th>Installation Date</th>
-                    <th>Condition</th>
-                    <th>Last Maintenance</th>
+                    <th>Request ID</th>
+                    <th>Citizen Name</th>
+                    <th>Request Type</th>
+                    <th>Request Date</th>
+                    <th>Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
-            <tbody id="resourcesTable"></tbody>
+            <tbody id="requestsTable"></tbody>
         </table>
     </div>
 

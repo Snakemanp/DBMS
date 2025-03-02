@@ -57,6 +57,13 @@ erDiagram
       string Status
       text Remarks
     }
+    SERVICE_REQUESTS {
+      int RequestID PK
+      int CitizenID FK
+      string RequestType {Birth certicate,death,Income ,Marriage ,Caste} 
+      datetime RequestDate
+      string Status { "Pending", "Approved", "Rejected", "Under Process" }
+    }
     
     %% New Modules: Assets, Vaccinations, Census, Households
     ASSETS {
@@ -132,13 +139,6 @@ erDiagram
       string Subject
       text Description
       datetime DateSubmitted
-    }
-    SERVICE_REQUESTS {
-      int RequestID PK
-      int CitizenID FK
-      string RequestType {Birth certicate,death,Income ,Marriage ,Caste} 
-      datetime RequestDate
-      string Status { "Pending", "Approved", "Rejected", "Under Process" }
     }
     Discussion_Forum{
       int CommentID PK

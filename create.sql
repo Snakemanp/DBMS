@@ -103,8 +103,17 @@ CREATE TABLE cultivationrecord (
 CREATE TABLE servicerequests (
     requestid SERIAL PRIMARY KEY,
     citizenid INTEGER NOT NULL,
-    requesttype VARCHAR(50) NOT NULL CHECK (requesttype IN ('Birth Certificate', 'Death', 'Income', 'Marriage', 'Caste')),
+    requesttype VARCHAR(50) NOT NULL CHECK (requesttype IN ('Birth Certificate', 'Death Certificate', 'Income Certificate', 'Marriage Certificate', 'Caste Certificate')),
     requestdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Approved', 'Rejected')),
     CONSTRAINT fk_citizen FOREIGN KEY (citizenid) REFERENCES citizens(citizenid) ON DELETE CASCADE
+);
+
+CREATE TABLE censusdata (
+    censuseventid SERIAL PRIMARY KEY,
+    citizenid INT NOT NULL,
+    eventtype VARCHAR(20) NOT NULL CHECK (eventtype IN ('Birth', 'Death', 'Marriage', 'Divorce')),
+    eventdate DATE NOT NULL,
+    eventnotes TEXT,
+    FOREIGN KEY (citizenid) REFERENCES citizens(citizenid) ON DELETE CASCADE
 );

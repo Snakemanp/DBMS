@@ -69,12 +69,9 @@ INSERT INTO cultivationrecord (landid, year, citizenid, season, croptype, cultiv
 (2, 2023, 1, 'Rabi', 'Rice', 4.5, 3000),
 (3, 2024, 2, 'Summer', 'Maize', 7.0, 4000);
 
-INSERT INTO servicerequests (citizenid, requesttype, requestdate) VALUES
-(3, 'Birth Certificate', '2024-02-10 09:30:00'),
-(7, 'Death', '2024-02-12 14:15:00'),
-(6, 'Income', '2024-02-15 11:45:00'),
-(8, 'Marriage', '2024-02-18 16:20:00'),
-(5, 'Caste', '2024-02-20 10:10:00'),
-(1, 'Income', '2024-02-22 08:00:00'),
-(2, 'Caste', '2024-02-25 12:30:00'),
-(4, 'Marriage', '2024-02-27 17:40:00');
+INSERT INTO censusdata (citizenid, eventtype, eventdate, eventnotes) VALUES
+(5, 'Birth', '1990-05-12', 'Birth record of Amit Sharma.'),
+(6, 'Marriage', '2020-05-15', 'Priya Verma married Rohit Das.'),
+(7, 'Divorce', '2023-11-30', 'Rajesh Kumar and Sanya Mehta got divorced.'),
+(3, 'Death', '2023-11-12', 'Mahesh Verma passed away.');
+

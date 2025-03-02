@@ -143,6 +143,8 @@ def login():
     user = User.query.filter_by(username=data['username']).first()
     if not user or user.password != data['password']:
         return jsonify({'error': 'Invalid username or password'}), 401
+    if user.role == 'Monitor' and user.password == data['password']:
+        return jsonify({'id': user.userid,'monitor': True, 'success': True})
     
     return jsonify({'id': user.citizenid, 'success': True})
 
@@ -165,6 +167,10 @@ def home():
 @app.route('/profile')
 def profile():
     userid = request.args.get('id', type=int)
+    is_monitor = request.args.get('monitor', default="false").lower() == "true"
+    if is_monitor:
+        return send_file("Profile_monitor.html")
+    
     citizen = Citizen.query.filter_by(citizenid=userid).first()
     employee = Employee.query.filter_by(citizenid=userid).first()
     
@@ -176,6 +182,16 @@ def profile():
 @app.route('/get-citizen')
 def get_citizen():
     user_id = request.args.get('id', type=int)
+    is_monitor = request.args.get('monitor', default="false").lower() == "true"
+    if is_monitor:
+        monitor = User.query.filter_by(userid = user_id).first()
+        if not monitor:
+            return jsonify({"error": "Monitor not found"}), 404
+        response = {
+            "username": monitor.username
+        }
+        return jsonify(response)
+    
     citizen = Citizen.query.filter_by(citizenid=user_id).first()
     employee = Employee.query.filter_by(citizenid=user_id).first()
     passkey = User.query.filter_by(citizenid=user_id).first()
@@ -204,6 +220,21 @@ def get_citizen():
 def update_citizen():
     data = request.json
     citizen_id = data.get("id")
+    is_monitor = request.args.get('monitor', default="false").lower() == "true"
+    if is_monitor:
+        monitor = User.query.filter_by(userid = citizen_id).first()
+        if not monitor:
+            return jsonify({"error": "Monitor not found"}), 404
+        if "password" in data and data["password"]:
+            monitor.password = data["password"]
+        if "username" in data and data["username"]:
+            monitor.username = data["username"]
+        try:
+            db.session.commit()
+            return jsonify({"success": "Profile updated successfully!"})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
     
     if not citizen_id:
         return jsonify({"error": "Citizen ID is required"}), 400

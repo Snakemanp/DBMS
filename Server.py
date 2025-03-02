@@ -154,23 +154,18 @@ def login():
     user = User.query.filter_by(username=data['username']).first()
     if not user or user.password != data['password']:
         return jsonify({'error': 'Invalid username or password'}), 401
-    if user.role == 'Admin' and user.password == data['password']:
-        return jsonify({'Admin': True ,'password':password_admin,'success':True})
-    if user.role == 'Monitor' and user.password == data['password']:
-        return jsonify({'id': user.userid,'monitor': True, 'success': True})
     
-    return jsonify({'id': user.citizenid, 'success': True})
+    return jsonify({'id': user.userid, 'success': True})
 
 @app.route('/home')
 def home():
-    is_monitor = request.args.get('monitor', default="false").lower() == "true"
-    userid = request.args.get('id', type=int)
-    if is_monitor:
-        monitor = User.query.filter_by(userid = userid).first()
-        return render_template("Home_monitor.html",username=monitor.username)
+    userid_ = request.args.get('id', type=int)
+    user = User.query.filter_by(userid = userid_).first()
+    if user.role == 'Monitor':
+        return render_template("Home_monitor.html",username=user.username)
 
-    citizen = Citizen.query.filter_by(citizenid=userid).first()
-    employee = Employee.query.filter_by(citizenid=userid).first()
+    citizen = Citizen.query.filter_by(citizenid=user.citizenid).first()
+    employee = Employee.query.filter_by(citizenid=user.citizenid).first()
     
     if not citizen:
         return "User not found", 404
@@ -179,13 +174,13 @@ def home():
 
 @app.route('/profile')
 def profile():
-    userid = request.args.get('id', type=int)
-    is_monitor = request.args.get('monitor', default="false").lower() == "true"
-    if is_monitor:
+    userid_ = request.args.get('id', type=int)
+    user = User.query.filter_by(userid = userid_).first()
+    if user.role == 'Monitor':
         return send_file("Profile_monitor.html")
     
-    citizen = Citizen.query.filter_by(citizenid=userid).first()
-    employee = Employee.query.filter_by(citizenid=userid).first()
+    citizen = Citizen.query.filter_by(citizenid=user.citizenid).first()
+    employee = Employee.query.filter_by(citizenid=user.citizenid).first()
     
     if not citizen:
         return "User not found", 404
@@ -194,20 +189,16 @@ def profile():
 
 @app.route('/get-citizen')
 def get_citizen():
-    user_id = request.args.get('id', type=int)
-    is_monitor = request.args.get('monitor', default="false").lower() == "true"
-    if is_monitor:
-        monitor = User.query.filter_by(userid = user_id).first()
-        if not monitor:
-            return jsonify({"error": "Monitor not found"}), 404
+    userid_ = request.args.get('id', type=int)
+    user = User.query.filter_by(userid = userid_).first()
+    if user.role == 'Monitor':
         response = {
-            "username": monitor.username
+            "username": user.username
         }
         return jsonify(response)
     
-    citizen = Citizen.query.filter_by(citizenid=user_id).first()
-    employee = Employee.query.filter_by(citizenid=user_id).first()
-    passkey = User.query.filter_by(citizenid=user_id).first()
+    citizen = Citizen.query.filter_by(citizenid=user.citizenid).first()
+    employee = Employee.query.filter_by(citizenid=user.citizenid).first()
     
     if not citizen:
         return jsonify({"error": "Citizen not found"}), 404
@@ -224,7 +215,7 @@ def get_citizen():
         "father_id": citizen.fatherid,
         "mother_id": citizen.motherid,
         "is_employee": bool(employee),
-        "username": passkey.username,
+        "username": user.username,
         "employee_role": employee.role if employee else None
     }
     return jsonify(response)
@@ -232,16 +223,15 @@ def get_citizen():
 @app.route('/update-citizen', methods=['POST'])
 def update_citizen():
     data = request.json
-    citizen_id = data.get("id")
-    is_monitor = request.args.get('monitor', default="false").lower() == "true"
-    if is_monitor:
-        monitor = User.query.filter_by(userid = citizen_id).first()
-        if not monitor:
-            return jsonify({"error": "Monitor not found"}), 404
+    userid_ = data.get("id")
+    if not userid_:
+        return jsonify({"error": "User ID is required"}), 400
+    user = User.query.filter_by(userid = userid_).first()
+    if user.role == 'Monitor':
         if "password" in data and data["password"]:
-            monitor.password = data["password"]
+            user.password = data["password"]
         if "username" in data and data["username"]:
-            monitor.username = data["username"]
+            user.username = data["username"]
         try:
             db.session.commit()
             return jsonify({"success": "Profile updated successfully!"})
@@ -249,18 +239,15 @@ def update_citizen():
             db.session.rollback()
             return jsonify({"error": f"Database error: {str(e)}"}), 500
     
-    if not citizen_id:
-        return jsonify({"error": "Citizen ID is required"}), 400
     
-    citizen = Citizen.query.filter_by(citizenid=citizen_id).first()
-    passkey = User.query.filter_by(citizenid=citizen_id).first()
+    citizen = Citizen.query.filter_by(citizenid=user.citizenid).first()
     if not citizen:
         return jsonify({"error": "Citizen not found"}), 404
     
     if "password" in data and data["password"]:
-        passkey.password = data["password"]
+        user.password = data["password"]
     if "username" in data and data["username"]:
-        passkey.username = data["username"]
+        user.username = data["username"]
     if "job" in data and data["job"]:
         citizen.job = data["job"]
     if "qualification" in data and data["qualification"]:
@@ -277,13 +264,13 @@ def update_citizen():
 #schemes
 @app.route('/schemes')
 def scheme():
-    userid = request.args.get('id', type=int)
-    is_monitor = request.args.get('monitor', default="false").lower() == "true"
-    if is_monitor:
+    userid_ = request.args.get('id', type=int)
+    user = User.query.filter_by(userid = userid_).first()
+    if user.role == 'Monitor':
         return send_file("Schemes_monitor.html")
     
-    citizen = Citizen.query.filter_by(citizenid=userid).first()
-    employee = Employee.query.filter_by(citizenid=userid).first()
+    citizen = Citizen.query.filter_by(citizenid=user.citizenid).first()
+    employee = Employee.query.filter_by(citizenid=user.citizenid).first()
     
     if not citizen:
         return "User not found", 404
@@ -292,12 +279,12 @@ def scheme():
 
 @app.route('/schemes/getschemes')
 def getscheme():
-    userid = request.args.get('id', type=int)
-    is_monitor = request.args.get('monitor', default="false").lower() == "true"
+    userid_ = request.args.get('id', type=int)
+    user = User.query.filter_by(userid = userid_).first()
     only_applied = request.args.get('onlyapplied', default="false").lower() == "true"
     schemes = []
 
-    if is_monitor:
+    if user.role == 'Monitor':
         # Fetch all schemes and count the number of citizens participating (status=True)
         monitored_schemes = (
             db.session.query(Scheme.schemeid, Scheme.schemename, Scheme.description, db.func.count(Schemeapp.applicationid))
@@ -315,7 +302,7 @@ def getscheme():
             })
         return jsonify(schemes)
     
-    if not userid:
+    if not userid_:
         return jsonify({"error": "User ID is required"}), 400
 
     if not only_applied:
@@ -337,7 +324,7 @@ def getscheme():
         applied_schemes = (
             db.session.query(Scheme, Schemeapp.remarks)
             .join(Schemeapp, Scheme.schemeid == Schemeapp.schemeid)
-            .filter(Schemeapp.citizenid == userid)
+            .filter(Schemeapp.citizenid == user.citizenid)
             .all()
         )
 
@@ -384,10 +371,11 @@ def getpendingscheme():
 @app.route('/applyschemes', methods=['POST'])
 def apply_schemes():
     data = request.json
-    userid = request.args.get('id', type=int)
+    userid_ = request.args.get('id', type=int)
+    user = User.query.filter_by(userid = userid_).first()
     is_user = request.args.get('user', default="false").lower() == "true"
 
-    if not userid:
+    if not userid_:
         return jsonify({"error": "User ID is required"}), 400
 
     if not data or 'schemeids' not in data:
@@ -399,13 +387,13 @@ def apply_schemes():
     if is_user:  
         # Case when it's a citizen applying for schemes
         for schemeid in scheme_ids:
-            existing_application = Schemeapp.query.filter_by(citizenid=userid, schemeid=schemeid).first()
+            existing_application = Schemeapp.query.filter_by(citizenid=user.citizenid, schemeid=schemeid).first()
 
             if existing_application:
                 applied_schemes.append({"schemeid": schemeid, "message": "Already Applied"})
             else:
                 new_application = Schemeapp(
-                    citizenid=userid,
+                    citizenid=user.citizenid,
                     schemeid=schemeid,
                     remarks="Pending Approval"
                 )
@@ -434,11 +422,11 @@ def apply_schemes():
 #Agri Records
 @app.route('/agrirecords')
 def agripage():
-    userid = request.args.get('id', type=int)
-    is_monitor = request.args.get('monitor', default="false").lower() == "true"
-    if is_monitor:
+    userid_ = request.args.get('id', type=int)
+    user = User.query.filter_by(userid = userid_).first()
+    if user.role == 'Monitor':
         return send_file("Agri_monitor.html")
-    citizen = Citizen.query.filter_by(citizenid=userid).first()
+    citizen = Citizen.query.filter_by(citizenid=user.citizenid).first()
     if not citizen:
         return "User not found", 404
 
@@ -447,9 +435,9 @@ def agripage():
 @app.route('/farmland', methods=['GET'])
 def get_farmlands():
     """Fetch all farmland owned by a user."""
-    userid = request.args.get('userid', type=int)
-    is_monitor = request.args.get('monitor', default="false").lower() == "true"
-    if is_monitor:
+    userid_ = request.args.get('userid', type=int)
+    user = User.query.filter_by(userid = userid_).first()
+    if user.role == 'Monitor':
         # Fetch citizen details and total farmland area
         users = db.session.query(
             Citizen.citizenid,
@@ -464,10 +452,10 @@ def get_farmlands():
             "TotalFarmland": user.TotalFarmland
         } for user in users])
       
-    if not userid:
+    if not userid_:
         return jsonify({"error": "User ID is required"}), 400
 
-    lands = AgriculturalLand.query.filter_by(citizenid=userid).all()
+    lands = AgriculturalLand.query.filter_by(citizenid=user.citizenid).all()
     return jsonify([{
         "landid": land.landid,
         "Area": land.area,
@@ -477,9 +465,9 @@ def get_farmlands():
 @app.route('/cultivationrecords', methods=['GET'])
 def get_cultivation_records():
     """Fetch all cultivation records for the user's farmlands."""
-    userid = request.args.get('userid', type=int)
-    is_monitor = request.args.get('monitor', default="false").lower() == "true"
-    if is_monitor:
+    userid_ = request.args.get('userid', type=int)
+    user = User.query.filter_by(userid = userid_).first()
+    if user.role == 'Monitor':
         # Aggregate data grouped by year, season, and croptype
         results = db.session.query(
             CultivationRecord.year,
@@ -503,10 +491,10 @@ def get_cultivation_records():
             for result in results
         ])
 
-    if not userid:
+    if not userid_:
         return jsonify({"error": "User ID is required"}), 400
 
-    records = db.session.query(CultivationRecord).join(AgriculturalLand).filter(AgriculturalLand.citizenid == userid).all()
+    records = db.session.query(CultivationRecord).join(AgriculturalLand).filter(AgriculturalLand.citizenid == user.citizenid).all()
     return jsonify([{
         "cultivationid": record.cultivationid,
         "landid": record.landid,
@@ -521,6 +509,8 @@ def get_cultivation_records():
 def add_cultivation():
     """Add a cultivation record."""
     data = request.json
+    userid_ = data['citizenid']
+    user = User.query.filter_by(userid = userid_).first()
     required_fields = ["landid", "year", "season", "croptype", "cultivatedarea", "productionquantity", "citizenid"]
 
     if not all(field in data for field in required_fields):
@@ -533,7 +523,7 @@ def add_cultivation():
         croptype=data['croptype'],
         cultivatedarea=data['cultivatedarea'],
         productionquantity=data['productionquantity'],
-        citizenid=data['citizenid']
+        citizenid=user.citizenid
     )
 
     db.session.add(new_record)
@@ -549,8 +539,9 @@ def resources_page():
     is_monitor = request.args.get('monitor', default="false").lower() == "true"
     if is_monitor:
         return send_file("Resources_monitor.html")
-    d = request.args.get('id', type=int)
-    employee = Employee.query.filter_by(citizenid = d).first()
+    userid_ = request.args.get('id', type=int)
+    user = User.query.filter_by(userid = userid_).first()
+    employee = Employee.query.filter_by(citizenid = user.citizenid).first()
     if not employee:
         return "User not found", 404
     print("Sent")
@@ -595,7 +586,7 @@ def delete_resource(assetid):
 
 @app.route('/services')
 def citizenrequests_page():
-    d = request.args.get('id', type=int)
+    userid_ = request.args.get('id', type=int)
     citizen = Citizen.query.first()
     if not citizen:
         return "User not found", 404
@@ -604,11 +595,12 @@ def citizenrequests_page():
 @app.route('/api/citizenrequests', methods=['GET'])
 def get_citizen_requests():
     """Fetch all service requests made by a specific citizen."""
-    citizenid = request.args.get('citizenid', type=int)
-    if not citizenid:
+    userid_ = request.args.get('citizenid', type=int)
+    user = User.query.filter_by(userid = userid_).first()
+    if not userid_:
         return jsonify({"error": "Citizen ID is required"}), 400
 
-    requests = ServiceRequest.query.filter_by(citizenid=citizenid).order_by(ServiceRequest.requestdate.desc()).all()
+    requests = ServiceRequest.query.filter_by(citizenid=user.citizenid).order_by(ServiceRequest.requestdate.desc()).all()
 
     return jsonify([
         {
@@ -624,11 +616,13 @@ def get_citizen_requests():
 def add_service_request():
     """Allow a citizen to submit a new service request."""
     data = request.json
+    userid_=data['citizenid']
+    user = User.query.filter_by(userid = userid_).first()
     if not data or 'citizenid' not in data or 'requesttype' not in data:
         return jsonify({"error": "Citizen ID and request type are required"}), 400
 
     new_request = ServiceRequest(
-        citizenid=data['citizenid'],
+        citizenid=user.citizenid,
         requesttype=data['requesttype'],
         requestdate=datetime.utcnow(),
         status="Pending"
@@ -642,8 +636,9 @@ def add_service_request():
 
 @app.route('/servicerequests')
 def servicerequests_page():
-    d = request.args.get('id', type=int)
-    employee = Employee.query.filter_by(citizenid = d).first()
+    userid_ = request.args.get('id', type=int)
+    user = User.query.filter_by(userid = userid_).first()
+    employee = Employee.query.filter_by(citizenid = user.citizenid).first()
     if not employee:
         return "User not found", 404
     return send_file('Services_employee.html')
@@ -692,8 +687,9 @@ def vaccinations_page():
     is_monitor = request.args.get('monitor', default="false").lower() == "true"
     if is_monitor:
         return send_file("Vaccinations_monitor.html")
-    d = request.args.get('id', type=int)
-    employee = Employee.query.filter_by(citizenid = d).first()
+    userid_ = request.args.get('id', type=int)
+    user = User.query.filter_by(userid = userid_).first()
+    employee = Employee.query.filter_by(citizenid = user.citizenid).first()
     if not employee:
         return "User not found", 404
     return send_file('Vaccinations_employee.html')
@@ -714,11 +710,12 @@ def get_vaccinations():
 def add_vaccination():
     """Add a vaccination record."""
     data = request.json
-
+    userid_ = data['citizenid']
+    user = User.query.filter_by(userid = userid_).first()
     print("Received Data:", data)
 
     new_vaccination = Vaccination(
-        citizenid=data['citizenid'],
+        citizenid=user.citizenid,
         vaccinetype=data['vaccinetype'],
         dateadministered=datetime.strptime(data['dateadministered'], '%Y-%m-%d')
     )
@@ -741,11 +738,12 @@ def delete_vaccination(vaccinationid):
 #census data
 @app.route('/census')
 def census_page():
-    d = request.args.get('id', type=int)
+    userid_ = request.args.get('id', type=int)
+    user = User.query.filter_by(userid = userid_).first()
     is_monitor = request.args.get('monitor', default="false").lower() == "true"
     if is_monitor:
         return send_file('Census_monitor.html')
-    employee = Employee.query.filter_by(citizenid = d).first()
+    employee = Employee.query.filter_by(citizenid = user.citizenid).first()
     if not employee:
         return "User not found", 404
     return send_file('Census_data.html')
@@ -754,11 +752,14 @@ def census_page():
 def add_census_data():
     """Allow employees to add census records."""
     data = request.json
+    userid_ = data['citizenid']
+    user = User.query.filter_by(userid = userid_).first()
+    
     if not data or 'citizenid' not in data or 'eventtype' not in data or 'eventdate' not in data:
         return jsonify({"error": "Citizen ID, event type, and date are required"}), 400
 
     new_entry = CensusData(
-        citizenid=data['citizenid'],
+        citizenid=user.citizenid,
         eventtype=data['eventtype'],
         eventdate=datetime.strptime(data['eventdate'], '%Y-%m-%d'),
         eventnotes=data.get('eventnotes', '')
@@ -770,8 +771,9 @@ def add_census_data():
 
 @app.route('/censusreport')
 def census_report_page():
-    d = request.args.get('id', type=int)
-    employee = Employee.query.filter_by(citizenid = d).first()
+    userid_ = request.args.get('id', type=int)
+    user = User.query.filter_by(userid = userid_).first()
+    employee = Employee.query.filter_by(citizenid = user.citizenid).first()
     if not employee:
         return "User not found", 404
     return send_file('Census_report.html')

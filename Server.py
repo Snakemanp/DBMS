@@ -85,7 +85,6 @@ class CultivationRecord(db.Model):
     cultivatedarea = db.Column(db.Float, nullable=False)
     productionquantity = db.Column(db.Float)
 
-
 @app.route('/')
 def login_page():
     return send_file("Home.html")
@@ -104,7 +103,12 @@ def login():
 
 @app.route('/home')
 def home():
+    is_monitor = request.args.get('monitor', default="false").lower() == "true"
     userid = request.args.get('id', type=int)
+    if is_monitor:
+        monitor = User.query.filter_by(userid = userid).first()
+        return render_template("Home_monitor.html",username=monitor.username)
+
     citizen = Citizen.query.filter_by(citizenid=userid).first()
     employee = Employee.query.filter_by(citizenid=userid).first()
     
@@ -181,6 +185,7 @@ def update_citizen():
         db.session.rollback()
         return jsonify({"error": f"Database error: {str(e)}"}), 500
 
+#schemes
 @app.route('/schemes')
 def scheme():
     userid = request.args.get('id', type=int)
@@ -363,6 +368,12 @@ def add_cultivation():
     db.session.commit()
 
     return jsonify({"message": "Cultivation record added successfully!"}), 201
+
+#Monitor code
+@app.route('/home', methods=['POST'])
+def add_cultivation():
+
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5173, debug=True)

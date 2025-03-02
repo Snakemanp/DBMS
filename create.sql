@@ -1,52 +1,110 @@
-DROP TABLE IF EXISTS CITIZENS;
-DROP TABLE IF EXISTS EMPLOYEE;   
-DROP TABLE IF EXISTS USERS;
-DROP TABLE IF EXISTS ASSETS;
--- DROP TABLE IF EXISTS HOUSEHOLDS;
-CREATE TABLE CITIZENS (
-    CitizenID INT PRIMARY KEY,
-    FullName VARCHAR(255) NOT NULL,
-    DateOfBirth DATE NOT NULL,
-    Gender VARCHAR(10) CHECK (Gender IN ('Male', 'Female', 'Other')),
-    HouseholdID INT,
-    ContactNumber VARCHAR(15),
-    Job VARCHAR(50) ,   
-    EducationalQualification VARCHAR(50) CHECK (EducationalQualification IN ('10th', '12th', 'Graduate', 'Post Graduate', 'Diploma', 'PhD', 'Other')),
-    FatherID INT NULL,
-    MotherID INT NULL,
-    FOREIGN KEY (FatherID) REFERENCES CITIZENS(CitizenID) ON DELETE SET NULL,
-    FOREIGN KEY (MotherID) REFERENCES CITIZENS(CitizenID) ON DELETE SET NULL
+DROP TABLE IF EXISTS employee;   
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS assets;
+DROP TABLE IF EXISTS welfarescheme;
+DROP TABLE IF EXISTS schemeapplication;
+DROP TABLE IF EXISTS agriculturalland;
+DROP TABLE IF EXISTS cultivationrecord;
+DROP TABLE IF EXISTS servicerequests;
+DROP TABLE IF EXISTS citizens;
+DROP TABLE IF EXISTS households;
+
+CREATE TABLE citizens (
+    citizenid  SERIAL PRIMARY KEY,
+    fullname VARCHAR(255) NOT NULL,
+    dateofbirth DATE NOT NULL,
+    gender VARCHAR(10) CHECK (Gender IN ('Male', 'Female', 'Other')),
+    householdid INT,
+    contactnumber VARCHAR(15),
+    job VARCHAR(50) ,   
+    educationalqualification VARCHAR(50) CHECK (educationalqualification IN ('10th', '12th', 'Graduate', 'Post Graduate', 'Diploma', 'PhD', 'Other')),
+    fatherid INT NULL,
+    motherid INT NULL,
+    FOREIGN KEY (fatherid) REFERENCES citizens(citizenid) ON DELETE SET NULL,
+    FOREIGN KEY (motherid) REFERENCES citizens(citizenid) ON DELETE SET NULL
 );
 
-CREATE TABLE EMPLOYEE (
-    EmployeeID INT PRIMARY KEY,
-    CitizenID INT UNIQUE,
-    Role VARCHAR(50) CHECK (Role IN ('Sarpanch', 'Secretary', 'Accountant', 'Clerk', 'Surveyor', 'Health Officer')),
-    FOREIGN KEY (CitizenID) REFERENCES CITIZENS(CitizenID) ON DELETE CASCADE
+CREATE TABLE employee (
+    employeeid SERIAL PRIMARY KEY,
+    citizenid INT UNIQUE,
+    role VARCHAR(50) CHECK (Role IN ('Sarpanch', 'Secretary', 'Accountant', 'Clerk', 'Surveyor', 'Health Officer')),
+    FOREIGN KEY (citizenid) REFERENCES citizens(citizenid) ON DELETE CASCADE
 );
 
-CREATE TABLE USERS(
-    UserID INT PRIMARY KEY,
-    Username VARCHAR(100) UNIQUE NOT NULL,
+CREATE TABLE users(
+    userid SERIAL PRIMARY KEY,
+    username VARCHAR(100) UNIQUE NOT NULL,
     Password VARCHAR(255) NOT NULL,
     Role VARCHAR(50) CHECK (Role IN ('Admin', 'Employee', 'Citizen', 'Monitor')),
-    CitizenID INT,
-    FOREIGN KEY (CitizenID) REFERENCES CITIZENS(CitizenID) ON DELETE SET NULL
+    citizenid INT,
+    FOREIGN KEY (citizenid) REFERENCES citizens(citizenid) ON DELETE SET NULL
 );
 
-CREATE TABLE ASSETS (
-    AssetID SERIAL PRIMARY KEY,
-    Type VARCHAR(100) NOT NULL,
-    Location VARCHAR(255) NOT NULL,
-    InstallationDate DATE NOT NULL,
-    Condition VARCHAR(50) CHECK (Condition IN ('Good', 'Needs Repair', 'Damaged', 'Replaced')),
-    LastMaintenanceDate DATE
+CREATE TABLE assets (
+    assetid SERIAL PRIMARY KEY,
+    type VARCHAR(100) NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    installationdate DATE NOT NULL,
+    condition VARCHAR(50) CHECK (condition IN ('Good', 'Needs Repair', 'Damaged', 'Replaced')),
+    lastmaintenancedate DATE
 );
 
-CREATE TABLE HOUSEHOLDS (
-    HouseholdID INT PRIMARY KEY,
-    Address VARCHAR(255) NOT NULL,
-    Income DECIMAL(12,2) NOT NULL CHECK (Income >= 0),
-    NumberOfMembers INT NOT NULL CHECK (NumberOfMembers > 0),
-    PropertyValue DECIMAL(12,2) CHECK (PropertyValue >= 0)
+CREATE TABLE households (
+    householdid SERIAL PRIMARY KEY,
+    address VARCHAR(255) NOT NULL,
+    income DECIMAL(12,2) NOT NULL CHECK (Income >= 0),
+    numberOfmembers INT NOT NULL CHECK (NumberOfMembers > 0),
+    propertyvalue DECIMAL(12,2) CHECK (PropertyValue >= 0)
+);
+
+CREATE TABLE welfarescheme (
+    schemeid SERIAL PRIMARY KEY,
+    SchemeName VARCHAR(100) UNIQUE NOT NULL,
+    Description TEXT NOT NULL,
+    EligibilityCriteria VARCHAR(200) NOT NULL,
+    Benefits TEXT NOT NULL,
+    LaunchDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    Department VARCHAR(100) NOT NULL,
+    ValidTill TIMESTAMP NOT NULL
+);
+
+CREATE TABLE schemeapplication (
+    applicationid SERIAL PRIMARY KEY,
+    Citizenid INT NOT NULL,
+    schemeid INT NOT NULL,
+    applicationdate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    Status BOOLEAN NOT NULL DEFAULT FALSE,
+    Remarks TEXT,
+    FOREIGN KEY (Citizenid) REFERENCES citizens(citizenid) ON DELETE CASCADE,
+    FOREIGN KEY (schemeid) REFERENCES welfarescheme(schemeid) ON DELETE CASCADE
+);
+
+CREATE TABLE agriculturalland (
+    landid SERIAL PRIMARY KEY,
+    citizenid INT NOT NULL,
+    area FLOAT NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    FOREIGN KEY (citizenid) REFERENCES citizens(citizenid) ON DELETE CASCADE
+);
+
+CREATE TABLE cultivationrecord (
+    cultivationid SERIAL PRIMARY KEY,
+    landid INT NOT NULL,
+    year INT NOT NULL,
+    citizenid INT NOT NULL,
+    season VARCHAR(50) NOT NULL,
+    croptype VARCHAR(100) NOT NULL,
+    cultivatedarea FLOAT NOT NULL,
+    productionquantity FLOAT,
+    FOREIGN KEY (citizenid) REFERENCES citizens(citizenid) ON DELETE CASCADE,
+    FOREIGN KEY (landid) REFERENCES agriculturalland(landid) ON DELETE CASCADE
+);
+
+CREATE TABLE servicerequests (
+    requestid SERIAL PRIMARY KEY,
+    citizenid INTEGER NOT NULL,
+    requesttype VARCHAR(50) NOT NULL CHECK (requesttype IN ('Birth Certificate', 'Death', 'Income', 'Marriage', 'Caste')),
+    requestdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Approved', 'Rejected')),
+    CONSTRAINT fk_citizen FOREIGN KEY (citizenid) REFERENCES citizens(citizenid) ON DELETE CASCADE
 );

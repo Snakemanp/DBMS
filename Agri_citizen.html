@@ -19,7 +19,7 @@
             display: flex;
             padding: 10px;
             justify-content: space-between;
-            position:absolute;
+            position: absolute;
             width: 100%;
             top: 0;
             left: 0;
@@ -101,21 +101,108 @@
             margin-top: 60px;
             padding: 20px;
         }
-        
+
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: auto;
+        }
+
+        form label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+
+        form input, form select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Error & Success Messages */
+        .error {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .success {
+            color: green;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* List Styling */
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul li {
+            background: white;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .record-container {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column; /* Each column takes a new row */
+            gap: 8px;
+        }
+
+        .record-container div {
+            padding: 8px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            font-size: 16px;
+        }
     </style>
     <script>
+        let userId; // Global variable to store the user ID
+    
         window.onload = function() {
+            alert("Welcome to the Agriculture Records Dashboard!");
             const params = new URLSearchParams(window.location.search);
-            const id = params.get("id");
-            if (id) {
-                document.getElementById("home").href = `/home?id=${id}`;
-                document.getElementById("profile").href = `/profile?id=${id}`;
-                document.getElementById("schemes").href = `/schemes?id=${id}`;
-                document.getElementById("services").href = `/services?id=${id}`;
-                document.getElementById("agri").href = `/agrirecords?id=${id}`
+            userId = params.get("id"); // Set the global userId
+            if (userId) {
+                document.getElementById("home").href = `/home?id=${userId}`;
+                document.getElementById("profile").href = `/profile?id=${userId}`;
+                document.getElementById("schemes").href = `/schemes?id=${userId}`;
+                document.getElementById("Services").href = `/services?id=${userId}`;
+                document.getElementById("agri").href = `/agrirecords?id=${userId}`;
+                
+                getFarmlands(userId);
+                
             }
         };
-
+    
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
             const overlay = document.querySelector('.overlay');
@@ -128,10 +215,156 @@
                 overlay.classList.add('active');
             }
         }
-
+    
         function closeSidebar() {
             document.querySelector('.sidebar').classList.remove('open');
             document.querySelector('.overlay').classList.remove('active');
+        }
+        
+        // Modified function to use regular callbacks instead of async/await
+        function getFarmlands(userId) {
+            if (!userId) {
+                alert("User ID is missing!");
+                return;
+            }
+    
+            fetch(`/farmland?userid=${userId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.json();
+                })
+                .then(farmlands => {
+                    let farmlandList = "<h3>Your Farmlands</h3><ul>";
+                    farmlands.forEach(farm => {
+                        farmlandList += 
+                                `<li class="record-container">
+                                    <div><strong>ID:</strong> ${farm.landid}</div>
+                                    <div><strong>Area:</strong> ${farm.Area} acres</div>
+                                    <div><strong>Address:</strong> ${farm.Address}</div>
+                                </li>`;
+                    });
+                    farmlandList += "</ul>";
+                    farmlandList += `<button onclick="addCultivationRecord()">Add Cultivation Record</button>
+                                    <button onclick="getCultivationRecords()">View Cultivation Records</button>`;
+                    document.querySelector(".main-content").innerHTML = farmlandList;
+                })
+                .catch(error => {
+                    console.error("Error fetching farmlands:", error);
+                    alert("Failed to fetch farmlands: " + error.message);
+                    // Show error in the main content
+                    document.querySelector(".main-content").innerHTML = 
+                        "<h3>Error Loading Farmlands</h3><p>There was a problem loading your farmland data. Please try again later.</p>";
+                });
+        }
+        
+        function getCultivationRecords() {
+            if (!userId) {
+                alert("User ID is missing!");
+                return;
+            }
+            
+            fetch(`/cultivationrecords?userid=${userId}`)
+                .then(response => response.json())
+                .then(records => {
+                    let recordList = "<h3>Your Cultivation Records</h3><ul>";
+                    records.forEach(record => {
+                        recordList += `
+                        <li class="record-container">
+                            <div><strong>Land ID:</strong> ${record.landid}</div>
+                            <div><strong>Year:</strong> ${record.year}</div>
+                            <div><strong>Season:</strong> ${record.season}</div>
+                            <div><strong>Crop:</strong> ${record.croptype}</div>
+                            <div><strong>Area:</strong> ${record.cultivatedarea} acres</div>
+                            <div><strong>Production:</strong> ${record.productionquantity} kg</div>
+                        </li>`;
+
+                    });
+                    recordList += "</ul>";
+                    recordList += `<button onclick="getFarmlands(${userId})">Back to Farmlands</button>
+                                  <button onclick="addCultivationRecord()">Add New Record</button>`;
+                    document.querySelector(".main-content").innerHTML = recordList;
+                })
+                .catch(error => {
+                    console.error("Error fetching cultivation records:", error);
+                    alert("Failed to fetch cultivation records.");
+                });
+        }
+        
+        function addCultivationRecord() {
+            if (!userId) {
+                alert("User ID is missing!");
+                return;
+            }
+        
+            fetch(`/farmland?userid=${userId}`)
+                .then(response => response.json())
+                .then(lands => {
+                    let form = '<h3>Add Cultivation Record</h3>';
+                    
+                    if (lands.length === 0) {
+                        form += '<p>You don\'t have any registered farmlands. Please contact an administrator to add farmland first.</p>';
+                        form += `<button onclick="getFarmlands(${userId})">Back to Farmlands</button>`;
+                    } else {
+                        form += '<form id="cultivationForm">';
+                        form += '<label>Select Farmland:</label><select id="landid">';
+                        lands.forEach(land => {
+                            form += `<option value="${land.landid}">${land.landid} - ${land.Address}</option>`;
+                        });
+                        form += `</select><br>
+                            <label>Year:</label><input type="number" id="year" value="${new Date().getFullYear()}"><br>
+                            <label>Season:</label><select id="season">
+                                <option value="Kharif">Kharif</option>
+                                <option value="Rabi">Rabi</option>
+                                <option value="Zaid">Zaid</option>
+                            </select><br>
+                            <label>Crop Type:</label><input type="text" id="croptype"><br>
+                            <label>Cultivated Area:</label><input type="number" step="0.01" id="cultivatedarea"><br>
+                            <label>Production Quantity (kg):</label><input type="number" step="0.01" id="productionquantity"><br>
+                            <button type="button" onclick="submitCultivationRecord()">Submit</button>
+                            <button type="button" onclick="getFarmlands(${userId})">Cancel</button>
+                            </form>`;
+                    }
+                    
+                    document.querySelector(".main-content").innerHTML = form;
+                })
+                .catch(error => {
+                    console.error("Error fetching farmlands:", error);
+                    alert("Failed to fetch farmlands.");
+                });
+        }
+        
+        function submitCultivationRecord() {
+            const landid = document.getElementById("landid").value;
+            const year = document.getElementById("year").value;
+            const season = document.getElementById("season").value;
+            const croptype = document.getElementById("croptype").value;
+            const cultivatedarea = document.getElementById("cultivatedarea").value;
+            const productionquantity = document.getElementById("productionquantity").value;
+        
+            // Basic validation
+            if (!landid || !year || !season || !croptype || !cultivatedarea || !productionquantity) {
+                alert("Please fill all fields");
+                return;
+            }
+        
+            fetch('/addcultivation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    landid, year, season, croptype, cultivatedarea, productionquantity, citizenid: userId
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert(result.message);
+                getCultivationRecords(); // Refresh the cultivation records after adding
+            })
+            .catch(error => {
+                console.error("Error submitting cultivation record:", error);
+                alert("Failed to submit cultivation record.");
+            });
         }
     </script>
 </head>
@@ -161,4 +394,3 @@
 
 </body>
 </html>
-<!-- 🛠️ -->

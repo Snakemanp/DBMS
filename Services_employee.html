@@ -162,6 +162,9 @@
                 document.getElementById("home").href = `/home?id=${id}`;
                 document.getElementById("profile").href = `/profile?id=${id}`;
                 document.getElementById("servicerequests").href = `/servicerequests?id=${id}`;
+                document.getElementById("resources").href = `/resources?id=${id}`;
+                document.getElementById("census").href = `/census?id=${id}`;
+                document.getElementById("WelSch").href = `/schemes?id=${id}`;
                 loadRequests();
             }
         };
@@ -235,7 +238,10 @@
     <div class="sidebar">
         <a id="home" href="/">🏠 Home</a>
         <a id="profile" href="/">👤 Profile</a>
-        <a id="servicerequests" href="/">📑 Service Requests</a>
+        <a id="servicerequests" href="/">📜 Sanction Certificates</a>
+        <a id="resources" href="/">📂 View Resources</a>
+        <a id="census" href="/">📊 Census Data</a>
+        <a id="WelSch" href="/">💰 Pending Schemes</a>
     </div>
 
     <!-- Main Content -->

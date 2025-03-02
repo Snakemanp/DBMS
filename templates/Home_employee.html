@@ -118,9 +118,10 @@
             if (id) {
                 document.getElementById("home").href = `/home?id=${id}`;
                 document.getElementById("profile").href = `/profile?id=${id}`;
-                document.getElementById("certificates").href = `/certificates?id=${id}`;
+                document.getElementById("servicerequests").href = `/servicerequests?id=${id}`;
                 document.getElementById("resources").href = `/resources?id=${id}`;
                 document.getElementById("census").href = `/census?id=${id}`;
+                document.getElementById("WelSch").href = `/schemes?id=${id}`;
             }
         };
 
@@ -156,11 +157,12 @@
 
     <!-- Sidebar -->
     <div class="sidebar">
-        <a id="home" href="/home">🏠 Home</a>
-        <a id="profile" href="/profile">👤 Profile</a>
-        <a id="certificates" href="/certificates">📜 Sanction Certificates</a>
-        <a id="resources" href="/resources">📂 View Resources</a>
-        <a id="census" href="/census">📊 Census Data</a>
+        <a id="home" href="/">🏠 Home</a>
+        <a id="profile" href="/">👤 Profile</a>
+        <a id="servicerequests" href="/">📜 Sanction Certificates</a>
+        <a id="resources" href="/">📂 View Resources</a>
+        <a id="census" href="/">📊 Census Data</a>
+        <a id="WelSch" href="/">💰 Pending Schemes</a>
     </div>
 
     <!-- Main Content -->

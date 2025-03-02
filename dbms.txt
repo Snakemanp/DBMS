@@ -88,6 +88,15 @@ erDiagram
       date EventDate
       text EventNotes
     }
+    VACCINATIONS {
+      int VaccinationID PK
+      int CitizenID FK
+      string VaccineType
+      date DateAdministered
+      int DoseNumber
+      string VaccineBatch
+      string VaccinationCenter
+    }
     
     %% Additional Extensions
     REPORT {
@@ -123,15 +132,6 @@ erDiagram
       int NumberOfTeachers
       string FacilitiesAvailable
       datetime DateRecorded
-    }
-    VACCINATIONS {
-      int VaccinationID PK
-      int CitizenID FK
-      string VaccineType
-      date DateAdministered
-      int DoseNumber
-      string VaccineBatch
-      string VaccinationCenter
     }
     FEEDBACK {
       int FeedbackID PK

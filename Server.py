@@ -5,11 +5,11 @@ from datetime import datetime
 app = Flask(__name__)
 
 # PostgreSQL database configuration
-DB_USERNAME = "22CS10015"
-DB_PASSWORD = "22CS10015"
-DB_HOST = "10.5.18.69"
+DB_USERNAME = "postgres"
+DB_PASSWORD = "sherlock221"
+DB_HOST = "127.0.0.1"
 DB_PORT = "5432"
-DB_NAME = "22CS10015"
+DB_NAME = "postgres"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -66,6 +66,25 @@ class Schemeapp(db.Model):
     status = db.Column(db.Boolean, nullable=False, default=False)
     remarks = db.Column(db.Text)
 
+class AgriculturalLand(db.Model):
+    __tablename__ = 'agriculturalland'
+    landid = db.Column(db.Integer, primary_key=True)
+    citizenid = db.Column(db.Integer, db.ForeignKey('citizens.citizenid', ondelete='CASCADE'), nullable=False)
+    area = db.Column(db.Float, nullable=False)
+    address = db.Column(db.String(255), nullable=False)
+
+class CultivationRecord(db.Model):
+    __tablename__ = 'cultivationrecord'
+    cultivationid = db.Column(db.Integer, primary_key=True)
+    landid = db.Column(db.Integer, db.ForeignKey('agriculturalland.landid', ondelete='CASCADE') , nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    citizenid = db.Column(db.Integer, db.ForeignKey('citizens.citizenid', ondelete='CASCADE'), nullable=False)
+    season = db.Column(db.String(50), nullable=False)
+    croptype = db.Column(db.String(100), nullable=False)
+    cultivatedarea = db.Column(db.Float, nullable=False)
+    productionquantity = db.Column(db.Float)
+
+
 class Asset(db.Model):
     __tablename__ = 'assets'
     assetid = db.Column(db.Integer, primary_key=True, autoincrement=True)  
@@ -75,6 +94,17 @@ class Asset(db.Model):
     installationdate = db.Column(db.Date, nullable=False)
     condition = db.Column(db.String(50), nullable=False)
     lastmaintenancedate = db.Column(db.Date)
+    
+class ServiceRequest(db.Model):
+    __tablename__ = 'servicerequests'
+    requestid = db.Column(db.Integer, primary_key=True)
+    citizenid = db.Column(db.Integer, db.ForeignKey('citizens.citizenid', ondelete='CASCADE'), nullable=False)
+    requesttype = db.Column(db.String(50), nullable=False)
+    requestdate = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    status = db.Column(db.String(20), nullable=False, default="Pending")
+    citizen = db.relationship("Citizen", backref="requests")
+
+    
     
 @app.route('/')
 def login_page():
@@ -180,7 +210,7 @@ def scheme():
     if not citizen:
         return "User not found", 404
 
-    return send_file("Home_employee.html" if employee else "Schemes_citizen.html")
+    return send_file("Schemes_employee.html" if employee else "Schemes_citizen.html")
 
 @app.route('/schemes/getschemes')
 def getscheme():
@@ -228,10 +258,36 @@ def getscheme():
 
     return jsonify(schemes)
 
+@app.route('/schemes/getpendingschemes')
+def getpendingscheme():
+    schemes = []
+    pending_schemes = (
+            db.session.query(Scheme, Schemeapp.remarks,Schemeapp.citizenid,Schemeapp.applicationid)
+            .join(Schemeapp, Scheme.schemeid == Schemeapp.schemeid)
+            .filter(Schemeapp.status == False)
+            .all()
+        )
+    for scheme,remarks, citizenid,applicationid in pending_schemes:
+            schemes.append({
+                "schemeid": scheme.schemeid,
+                "applicationid": applicationid,
+                "SchemeName": scheme.schemename,
+                "Description": scheme.description,
+                "EligibilityCriteria": scheme.eligibilitycriteria,
+                "Benefits": scheme.benefits,
+                "Department": scheme.department,
+                "ValidTill": scheme.validtill.strftime('%Y-%m-%d'),
+                "citizenid": citizenid,
+                "remarks": remarks
+            })
+    return jsonify(schemes)
+    
+
 @app.route('/applyschemes', methods=['POST'])
 def apply_schemes():
     data = request.json
     userid = request.args.get('id', type=int)
+    is_user = request.args.get('user', default="false").lower() == "true"
 
     if not userid:
         return jsonify({"error": "User ID is required"}), 400
@@ -242,18 +298,33 @@ def apply_schemes():
     scheme_ids = data["schemeids"]
     applied_schemes = []
 
-    for schemeid in scheme_ids:
-        existing_application = Schemeapp.query.filter_by(citizenid=userid, schemeid=schemeid).first()
+    if is_user:  
+        # Case when it's a citizen applying for schemes
+        for schemeid in scheme_ids:
+            existing_application = Schemeapp.query.filter_by(citizenid=userid, schemeid=schemeid).first()
 
-        if existing_application:
-            applied_schemes.append({"schemeid": schemeid, "message": "Already Applied"})
-        else:
-            new_application = Schemeapp(
-                citizenid=userid,
-                schemeid=schemeid,
-                remarks="Pending Approval"
-            )
-            db.session.add(new_application)
+            if existing_application:
+                applied_schemes.append({"schemeid": schemeid, "message": "Already Applied"})
+            else:
+                new_application = Schemeapp(
+                    citizenid=userid,
+                    schemeid=schemeid,
+                    remarks="Pending Approval"
+                )
+                db.session.add(new_application)
+    else:
+        # Case when it's an admin or non-user updating the scheme table
+        for app in scheme_ids:
+            applicationid = app["applicationid"]
+            remarks = app["remarks"]
+            status = app["status"]
+
+            scheme_app = Schemeapp.query.filter_by(applicationid=applicationid).first()
+            if scheme_app:
+                scheme_app.remarks = remarks
+                scheme_app.status = status
+            else:
+                applied_schemes.append({"applicationid": applicationid, "message": "Application Not Found"})
 
     try:
         db.session.commit()
@@ -272,6 +343,62 @@ def agripage():
 
     return send_file("Agri_citizen.html")
 
+@app.route('/farmland', methods=['GET'])
+def get_farmlands():
+    """Fetch all farmland owned by a user."""
+    userid = request.args.get('userid', type=int)
+    if not userid:
+        return jsonify({"error": "User ID is required"}), 400
+
+    lands = AgriculturalLand.query.filter_by(citizenid=userid).all()
+    return jsonify([{
+        "landid": land.landid,
+        "Area": land.area,
+        "Address": land.address
+    } for land in lands])
+
+@app.route('/cultivationrecords', methods=['GET'])
+def get_cultivation_records():
+    """Fetch all cultivation records for the user's farmlands."""
+    userid = request.args.get('userid', type=int)
+    if not userid:
+        return jsonify({"error": "User ID is required"}), 400
+
+    records = db.session.query(CultivationRecord).join(AgriculturalLand).filter(AgriculturalLand.citizenid == userid).all()
+    return jsonify([{
+        "cultivationid": record.cultivationid,
+        "landid": record.landid,
+        "year": record.year,
+        "season": record.season,
+        "croptype": record.croptype,
+        "cultivatedarea": record.cultivatedarea,
+        "productionquantity": record.productionquantity
+    } for record in records])
+
+@app.route('/addcultivation', methods=['POST'])
+def add_cultivation():
+    """Add a cultivation record."""
+    data = request.json
+    required_fields = ["landid", "year", "season", "croptype", "cultivatedarea", "productionquantity", "citizenid"]
+
+    if not all(field in data for field in required_fields):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    new_record = CultivationRecord(
+        landid=data['landid'],
+        year=data['year'],
+        season=data['season'],
+        croptype=data['croptype'],
+        cultivatedarea=data['cultivatedarea'],
+        productionquantity=data['productionquantity'],
+        citizenid=data['citizenid']
+    )
+
+    db.session.add(new_record)
+    db.session.commit()
+
+    return jsonify({"message": "Cultivation record added successfully!"}), 201
+
 # Employee - Resources
 
 @app.route('/resources')
@@ -282,24 +409,6 @@ def resources_page():
         return "User not found", 404
     return send_file('Resources_employee.html')
 
-# @app.route('/api/resources', methods=['GET'])
-# def get_resources():
-#     resources = Asset.query.all()
-#     return jsonify([{
-#         'AssetID': resource.id,
-#         'Type': resource.type,
-#         'Location': resource.location,
-#         'Condition': resource.condition
-#     } for resource in resources])
-
-# @app.route('/api/delete_resource/<int:asset_id>', methods=['DELETE'])
-# def delete_resource(asset_id):
-#     resource = Asset.query.get(asset_id)
-#     if resource:
-#         db.session.delete(resource)
-#         db.session.commit()
-#         return jsonify({'message': 'Resource deleted successfully'}), 200
-#     return jsonify({'error': 'Resource not found'}), 404
 @app.route('/api/resources', methods=['GET'])
 def get_resources():
     resources = Asset.query.all()
@@ -334,6 +443,56 @@ def delete_resource(assetid):
         db.session.commit()
         return jsonify({'message': 'Resource deleted successfully'}), 200
     return jsonify({'error': 'Resource not found'}), 404
+
+#Citizen - Service Requests
+
+#Employee - Service Requests
+
+@app.route('/servicerequests')
+def servicerequests_page():
+    d = request.args.get('id', type=int)
+    employee = Employee.query.filter_by(citizenid = d).first()
+    if not employee:
+        return "User not found", 404
+    return send_file('Services_employee.html')
+
+@app.route('/api/servicerequests', methods=['GET'])
+def get_service_requests():
+    requests = db.session.query(
+        ServiceRequest.requestid,
+        Citizen.fullname.label('citizenname'),
+        ServiceRequest.requesttype,
+        ServiceRequest.requestdate,
+        ServiceRequest.status
+    ).join(Citizen, ServiceRequest.citizenid == Citizen.citizenid).filter(ServiceRequest.status == "Pending").order_by(ServiceRequest.requestdate.asc()).all()
+    return jsonify([
+        {
+            'requestid': req.requestid,
+            'citizenname': req.citizenname,
+            'requesttype': req.requesttype,
+            'requestdate': req.requestdate.strftime('%Y-%m-%d'),
+            'status': req.status
+        }
+        for req in requests
+    ])
+
+@app.route('/api/servicerequests/<int:requestid>', methods=['PUT'])
+def update_service_request(requestid):
+    data = request.json
+    new_status = data.get('status')
+
+    if new_status not in ['approved', 'rejected']:
+        return jsonify({'error': 'Invalid status'}), 400
+
+    request_entry = ServiceRequest.query.get(requestid)
+    if not request_entry:
+        return jsonify({'error': 'Request not found'}), 404
+
+    request_entry.status = new_status.capitalize()
+    print(request_entry.status)
+    db.session.commit()
+
+    return jsonify({'message': f'Service request {new_status} successfully'}), 200
 
 
 if __name__ == "__main__":

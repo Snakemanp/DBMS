@@ -128,7 +128,10 @@
                 console.log("Response Data:", data);
                 if (data.success) {
                     alert("Login Successful!");
-                    if(data.monitor){
+                    if(data.Admin){
+                        window.location.href = `/admin?password=${data.password}`;
+                    }
+                    else if(data.monitor){
                         window.location.href = `/home?id=${data.id}&monitor=${true}`;
                     }
                     else{

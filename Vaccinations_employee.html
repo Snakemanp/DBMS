@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Resources</title>
+    <title>Manage Vaccinations</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -190,65 +190,60 @@
                 document.getElementById("censusreport").href = `/censusreport?id=${id}`;
                 document.getElementById("WelSch").href = `/schemes?id=${id}`;
                 document.getElementById("vaccinations").href = `/vaccinations?id=${id}`;
-                loadResources();
+                loadVaccinations();
             }
         };
 
-        function loadResources() {
-            fetch('/api/resources')
+        function loadVaccinations() {
+            fetch('/api/vaccinations')
                 .then(response => response.json())
                 .then(data => {
-                    const table = document.getElementById("resourcesTable");
+                    const table = document.getElementById("vaccinationTable");
                     table.innerHTML = ""; // Clear previous data
 
-                    data.forEach(resource => {
+                    data.forEach(record => {
                         const row = document.createElement("tr");
                         row.innerHTML = `
-                            <td>${resource.id}</td>
-                            <td>${resource.type}</td>
-                            <td>${resource.location}</td>
-                            <td>${resource.installationdate}</td>
-                            <td>${resource.condition}</td>
-                            <td>${resource.lastmaintenancedate}</td>
-                            <td><button class="deletebtn" onclick="deleteResource(${resource.id})">Delete</button></td>
+                            <td>${record.id}</td>
+                            <td>${record.citizen_name}</td>
+                            <td>${record.vaccinetype}</td>
+                            <td>${record.date_administered}</td>
+                            <td><button class="deletebtn" onclick="deleteVaccination(${record.id})">Delete</button></td>
                         `;
                         table.appendChild(row);
                     });
                 })
-                .catch(error => console.error("Error loading resources:", error));
+                .catch(error => console.error("Error loading vaccinations:", error));
         }
 
-        function addResource() {
-            console.log("hi");
-            const resourceData = {
-                type: document.getElementById("resourcetype").value,
-                location: document.getElementById("location").value,
-                installationdate: document.getElementById("installationdate").value,
-                condition: document.getElementById("condition").value,
-                lastmaintenancedate: new Date().toISOString().split('T')[0]
+        function addVaccination() {
+            const vaccinationData = {
+                citizenid: document.getElementById("citizenid").value,
+                vaccinetype: document.getElementById("vaccinetype").value,
+                dateadministered: document.getElementById("dateadministered").value
             };
-            console.log(resourceData);
-            fetch('/api/resources', {
+
+            fetch('/api/vaccinations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(resourceData)
+                body: JSON.stringify(vaccinationData)
             })
             .then(response => response.json())
             .then(data => {
                 alert(data.message);
-                loadResources(); // Refresh list
+                loadVaccinations(); // Refresh list
             })
-            .catch(error => console.error("Error adding resource:", error));
+            .catch(error => console.error("Error adding vaccination:", error));
         }
 
-        function deleteResource(assetid) {
-            fetch(`/api/resources/${assetid}`, { method: 'DELETE' })
+        function deleteVaccination(vaccinationid) {
+            fetch(`/api/vaccinations/${vaccinationid}`, { method: 'DELETE' })
                 .then(response => response.json())
                 .then(data => {
                     alert(data.message);
-                    loadResources(); // Refresh list
+                    loadVaccinations(); // Refresh list
                 })
-                .catch(error => console.error("Error deleting resource:", error));
+                .catch(error => console.error("Error deleting vaccination:", error));
         }
 
         function toggleSidebar() {
@@ -290,30 +285,17 @@
 
     <!-- Main Content -->
     <div class="maincontent">
-        <h1>Manage Resources</h1>
+        <h1>Manage Vaccinations</h1>
 
         <div class="formcontainer">
             <form>
-                <label>Resource Type:</label>
-                <select id="resourcetype">
-                    <option value="Street Light">Street Light</option>
-                    <option value="Water Tank">Water Tank</option>
-                    <option value="Road">Road</option>
-                    <option value="Park">Park</option>
-                    <option value="Public Toilet">Public Toilet</option>
-                </select>
-                <label>Location:</label>
-                <input type="text" id="location">
-                <label>Installation Date:</label>
-                <input type="date" id="installationdate">
-                <label>Condition:</label>
-                <select id="condition">
-                    <option value="Good">Good</option>
-                    <option value="Needs Repair">Needs Repair</option>
-                    <option value="Replaced">Replaced</option>
-                    <option value="Damaged">Damaged</option>
-                </select>
-                <button type="button" onclick="addResource()">Add Resource</button>
+                <label>Citizen ID:</label>
+                <input type="number" id="citizenid">
+                <label>Vaccine Type:</label>
+                <input type="text" id="vaccinetype">
+                <label>Date Administered:</label>
+                <input type="date" id="dateadministered">
+                <button type="button" onclick="addVaccination()">Add Vaccination</button>
             </form>
         </div>
 
@@ -321,15 +303,13 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Type</th>
-                    <th>Location</th>
-                    <th>Installation Date</th>
-                    <th>Condition</th>
-                    <th>Last Maintenance</th>
+                    <th>Citizen Name</th>
+                    <th>Vaccine Type</th>
+                    <th>Date Administered</th>
                     <th>Action</th>
                 </tr>
             </thead>
-            <tbody id="resourcesTable"></tbody>
+            <tbody id="vaccinationTable"></tbody>
         </table>
     </div>
 

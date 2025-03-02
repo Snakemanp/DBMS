@@ -27,12 +27,8 @@ INSERT INTO USERS ( Username, Password, Role, CitizenID) VALUES
 ('amit_admin', 'password123', 'Employee', 5),
 ('priya_emp', 'emp456', 'Employee', 6),
 ('rajesh_mon', 'mon789', 'Employee', 7),
-<<<<<<< HEAD
-('sanya_citizen', 'citizen101', 'Employee', 8);
-=======
 ('sanya_citizen', 'citizen101', 'Employee', 8),
 ('Preetham','Preetham123@','Monitor',NULL);
->>>>>>> be62314 (Fourth commit)
 
 INSERT INTO ASSETS (Type, Location, InstallationDate, Condition, LastMaintenanceDate) VALUES
 ('Water Pump', 'Village A', '2018-06-15', 'Good', '2023-07-10'),
@@ -80,3 +76,10 @@ INSERT INTO censusdata (citizenid, eventtype, eventdate, eventnotes) VALUES
 (7, 'Divorce', '2023-11-30', 'Rajesh Kumar and Sanya Mehta got divorced.'),
 (3, 'Death', '2023-11-12', 'Mahesh Verma passed away.');
 
+INSERT INTO vaccinations (citizenid, vaccinetype, dateadministered) VALUES
+(1, 'Pfizer', '2023-01-15'),
+(2, 'Moderna', '2023-02-10'),
+(3, 'Johnson & Johnson', '2023-03-05'),
+(4, 'AstraZeneca', '2023-04-20'),
+(5, 'Pfizer', '2023-05-25'),
+(6, 'Moderna', '2023-06-30');

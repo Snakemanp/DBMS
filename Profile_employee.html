@@ -181,11 +181,12 @@
             if (id) {
                 document.getElementById("home").href = `/home?id=${id}`;
                 document.getElementById("profile").href = `/profile?id=${id}`;
-                document.getElementById("servicerequests").href = `/servicerequests?id=${id}`;
+                document.getElementById("certificates").href = `/servicerequests?id=${id}`;
                 document.getElementById("resources").href = `/resources?id=${id}`;
                 document.getElementById("census").href = `/census?id=${id}`;
-                document.getElementById("censusreport").href = `/censusreport?id=${id}`; 
+                document.getElementById("censusreport").href = `/censusreport?id=${id}`;
                 document.getElementById("WelSch").href = `/schemes?id=${id}`;
+                document.getElementById("vaccinations").href = `/vaccinations?id=${id}`;
                 loadCitizenData(id);
             }
         };
@@ -284,11 +285,12 @@
     <div class="sidebar">
         <a id="home" href="/">🏠 Home</a>
         <a id="profile" href="/">👤 Profile</a>
-        <a id="servicerequests" href="/">📜 Sanction Certificates</a>
+        <a id="certificates" href="/">📜 Sanction Certificates</a>
         <a id="resources" href="/">📂 View Resources</a>
         <a id="census" href="/">📊 Census Data</a>
-        <a id="censusreport" href="/">Census Report</a>
+        <a id="censusreport" href="/"> Census Report</a>
         <a id="WelSch" href="/">💰 Pending Schemes</a>
+        <a id="vaccinations" href="/">Vaccinations</a>
     </div>
 
     <!-- Loading Message -->

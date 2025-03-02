@@ -1,15 +1,6 @@
 DROP TABLE IF EXISTS employee;   
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS assets;
-<<<<<<< HEAD
-DROP TABLE IF EXISTS welfarescheme;
-DROP TABLE IF EXISTS schemeapplication;
-DROP TABLE IF EXISTS agriculturalland;
-DROP TABLE IF EXISTS cultivationrecord;
-DROP TABLE IF EXISTS servicerequests;
-DROP TABLE IF EXISTS citizens;
-DROP TABLE IF EXISTS households;
-=======
 DROP TABLE IF EXISTS schemeapplication;
 DROP TABLE IF EXISTS welfarescheme;
 DROP TABLE IF EXISTS cultivationrecord;
@@ -18,7 +9,7 @@ DROP TABLE IF EXISTS servicerequests;
 DROP TABLE IF EXISTS households;
 DROP TABLE IF EXISTS censusdata;
 DROP TABLE IF EXISTS citizens;
->>>>>>> be62314 (Fourth commit)
+DROP TABLE IF EXISTS vaccinations;
 
 CREATE TABLE citizens (
     citizenid  SERIAL PRIMARY KEY,
@@ -126,5 +117,13 @@ CREATE TABLE censusdata (
     eventtype VARCHAR(20) NOT NULL CHECK (eventtype IN ('Birth', 'Death', 'Marriage', 'Divorce')),
     eventdate DATE NOT NULL,
     eventnotes TEXT,
+    FOREIGN KEY (citizenid) REFERENCES citizens(citizenid) ON DELETE CASCADE
+);
+
+CREATE TABLE vaccinations (
+    vaccinationid SERIAL PRIMARY KEY,
+    citizenid INT NOT NULL,
+    vaccinetype VARCHAR(255) NOT NULL,
+    dateadministered DATE NOT NULL,
     FOREIGN KEY (citizenid) REFERENCES citizens(citizenid) ON DELETE CASCADE
 );

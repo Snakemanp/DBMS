@@ -131,7 +131,7 @@
         document.getElementById("census").href = `/census?id=${id}&monitor=${true}`;
         document.getElementById("WelSch").href = `/schemes?id=${id}&monitor=${true}`;
         document.getElementById("agri").href = `/agrirecords?id=${id}&monitor=${true}`;
-        
+        document.getElementById("vaccinations").href = `/vaccinations?id=${id}&monitor=${true}`;
         // Fetch both data sets
         fetchFarmlandAndCrops(id);
     }
@@ -230,6 +230,7 @@ function fetchFarmlandAndCrops(userId) {
         <a id="resources" href="/">📂 View Resources</a>
         <a id="census" href="/">📊 Census Data</a>
         <a id="WelSch" href="/">💰 Schemes Data</a>
+        <a id="vaccinations" href="/"> Vaccinations</a>
         <a id="agri" href="/">🌾 Agri Data</a>
     </div>
 

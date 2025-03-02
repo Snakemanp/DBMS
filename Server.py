@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import calendar
     
 app = Flask(__name__)
+password_admin = "meow@1234"
 
 # PostgreSQL database configuration
 DB_USERNAME = "22CS10015"
@@ -131,6 +132,15 @@ class Households(db.Model):
         db.CheckConstraint("numberofmembers > 0", name='members_check'),
         db.CheckConstraint("propertyvalue >= 0", name='property_check'),
     )
+
+class Vaccination(db.Model):
+    __tablename__ = 'vaccinations'
+
+    vaccinationid = db.Column(db.Integer, primary_key=True)
+    citizenid = db.Column(db.Integer, db.ForeignKey('citizens.citizenid', ondelete="CASCADE"), nullable=False)
+    vaccinetype = db.Column(db.String(255), nullable=False)
+    dateadministered = db.Column(db.Date, nullable=False)
+
 @app.route('/')
 def login_page():
     return send_file("Home.html")
@@ -144,6 +154,8 @@ def login():
     user = User.query.filter_by(username=data['username']).first()
     if not user or user.password != data['password']:
         return jsonify({'error': 'Invalid username or password'}), 401
+    if user.role == 'Admin' and user.password == data['password']:
+        return jsonify({'Admin': True ,'password':password_admin,'success':True})
     if user.role == 'Monitor' and user.password == data['password']:
         return jsonify({'id': user.userid,'monitor': True, 'success': True})
     
@@ -205,7 +217,7 @@ def get_citizen():
         "name": citizen.fullname,
         "dob": citizen.dateofbirth.strftime('%Y-%m-%d'),
         "gender": citizen.gender,
-        "household_id": citizen.householdid,
+        "householdid": citizen.householdid,
         "phone": citizen.contactnumber,
         "job": citizen.job,
         "qualification": citizen.educationalqualification,
@@ -674,6 +686,58 @@ def update_service_request(requestid):
 
     return jsonify({'message': f'Service request {new_status} successfully'}), 200
 
+# Vaccinations
+@app.route('/vaccinations')
+def vaccinations_page():
+    is_monitor = request.args.get('monitor', default="false").lower() == "true"
+    if is_monitor:
+        return send_file("Vaccinations_monitor.html")
+    d = request.args.get('id', type=int)
+    employee = Employee.query.filter_by(citizenid = d).first()
+    if not employee:
+        return "User not found", 404
+    return send_file('Vaccinations_employee.html')
+
+@app.route('/api/vaccinations', methods=['GET'])
+def get_vaccinations():
+    vaccinations = db.session.query(Vaccination, Citizen.fullname).join(Citizen, Citizen.citizenid == Vaccination.citizenid).all()
+
+    return jsonify([{
+        'id': record.Vaccination.vaccinationid,
+        'citizen_name': record.fullname,
+        'citizen_id': record.Vaccination.citizenid,
+        'vaccinetype': record.Vaccination.vaccinetype,
+        'date_administered': record.Vaccination.dateadministered.strftime('%Y-%m-%d')
+    } for record in vaccinations])
+
+@app.route('/api/vaccinations', methods=['POST'])
+def add_vaccination():
+    """Add a vaccination record."""
+    data = request.json
+
+    print("Received Data:", data)
+
+    new_vaccination = Vaccination(
+        citizenid=data['citizenid'],
+        vaccinetype=data['vaccinetype'],
+        dateadministered=datetime.strptime(data['dateadministered'], '%Y-%m-%d')
+    )
+
+    db.session.add(new_vaccination)
+    db.session.commit()
+
+    return jsonify({'message': 'Vaccination record added successfully'}), 201
+
+@app.route('/api/vaccinations/<int:vaccinationid>', methods=['DELETE'])
+def delete_vaccination(vaccinationid):
+    vaccination = Vaccination.query.get(vaccinationid)
+    if vaccination:
+        db.session.delete(vaccination)
+        db.session.commit()
+        return jsonify({'message': 'vaccination deleted successfully'}), 200
+    return jsonify({'error': 'vaccination not found'}), 404
+
+
 #census data
 @app.route('/census')
 def census_page():
@@ -883,6 +947,105 @@ def get_census_report():
     
     return jsonify(census_data)
 
+#Admin page
+@app.route('/admin')
+def admin_home():
+    password = request.args.get('password',str)
+    if(password == password_admin):
+        return send_file("Home_admin.html")
+    return jsonify({"error": "Incorrect password"})
+
+@app.route('/admin/add-citizen', methods=['POST'])
+def add_citizen():
+    data = request.json
+    household_registered = data.get("household_registered")  # Expecting 'yes' or 'no'
+
+    if household_registered == "yes":
+        householdid = data.get("householdid")
+        household = Households.query.filter_by(householdid=householdid).first()
+        if not household:
+            return jsonify({"error": "Household not found"}), 404
+        
+        # Increase number of members in the household
+        household.numberofmembers += 1
+
+    else:  # If household is not registered, create a new one
+        new_household = Households(
+            address=data.get("address"),
+            income=data.get("income"),
+            numberofmembers=1,  # Since we're adding the first member
+            propertyvalue=data.get("propertyvalue")
+        )
+        db.session.add(new_household)
+        db.session.commit()  # Commit to generate householdid
+        householdid = new_household.householdid
+
+    # Add the new citizen with the determined householdid
+    new_citizen = Citizen(
+        fullname=data.get("fullname"),
+        dateofbirth=datetime.strptime(data.get("dateofbirth"), '%Y-%m-%d'),
+        gender=data.get("gender"),
+        householdid=householdid,
+        contactnumber=data.get("contactnumber"),
+        job=data.get("job"),
+        educationalqualification=data.get("educationalqualification")
+    )
+    
+    db.session.add(new_citizen)
+    db.session.commit()
+
+    return jsonify({"success": "Citizen added successfully!"})
+
+@app.route('/admin/delete-citizen', methods=['POST'])
+def delete_citizen():
+    data = request.json
+    citizen = Citizen.query.filter_by(citizenid=data['citizenid']).first()
+    householdid = citizen.householdid
+    Citizen.query.filter_by(citizenid=data['citizenid']).delete()
+    # householdid = data.get("householdid")
+    household = Households.query.filter_by(householdid=householdid).first()
+    if household.numberofmembers == 1:
+        Households.query.filter_by(householdid=household.householdid).delete()
+    else:
+        household.numberofmembers -= 1
+    db.session.commit()
+    return jsonify({"success": "Citizen deleted successfully!"})
+
+@app.route('/admin/add-employee', methods=['POST'])
+def add_employee():
+    data = request.json
+    new_employee = Employee(citizenid=data['citizenid'], role=data['role'])
+    db.session.add(new_employee)
+    db.session.commit()
+    return jsonify({"success": "Employee added successfully!"})
+
+@app.route('/admin/edit-employee', methods=['GET', 'POST'])
+def edit_employee():
+    if request.method == 'GET':
+        employees = Employee.query.all()
+        return jsonify([{ "id": e.employeeid, "citizen_id": e.citizenid, "role": e.role } for e in employees])
+    
+    data = request.json
+    employee = Employee.query.filter_by(employeeid=data['employeeid']).first()
+    if employee:
+        employee.role = data['role']
+        db.session.commit()
+        return jsonify({"success": "Employee updated successfully!"})
+    return jsonify({"error": "Employee not found"}), 401
+
+
+@app.route('/admin/remove-employee', methods=['POST'])
+def remove_employee():
+    data = request.json
+    employee = Employee.query.filter_by(employeeid=data['employeeid']).first()
+    if not employee:
+        return jsonify({"error": "Employee not found"}), 401
+    # citizen = Citizen.query.filter_by(citizenid=employee.citizenid).first()
+    user  = User.query.filter_by(citizenid=employee.citizenid).first()
+    user.role = "Citizen"
+    Employee.query.filter_by(employeeid=data['employeeid']).delete()
+    db.session.commit()
+    return jsonify({"success": "Employee removed successfully!"})
 
 
 if __name__ == "__main__":

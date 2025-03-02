@@ -143,25 +143,27 @@
         
         .chart-row {
             display: flex;
-            flex-wrap: wrap;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
             margin-bottom: 20px;
         }
         
         .chart-container {
-            flex-basis: 48%;
-            background-color: white;
+            flex: 1;
+            min-width: 300px; /* Ensures charts don't get too small */
+            max-width: 48%; /* Ensures two charts per row */
+            background: #fff;
             padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
         
         .chart-container h3 {
-            color: #444;
-            margin-top: 0;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: #333;
         }
         
         canvas {
@@ -241,7 +243,7 @@
                 <h2 id="avg-household-size">--</h2>
             </div>
             <div class="stat-card">
-                <p>Average Income (₹)</p>
+                <p>Average Household Income (₹)</p>
                 <h2 id="avg-income">--</h2>
             </div>
         </div>

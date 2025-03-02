@@ -116,12 +116,11 @@
             const params = new URLSearchParams(window.location.search);
             const id = params.get("id");
             if (id) {
-                document.getElementById("home").href = `/home?id=${id}`;
-                document.getElementById("profile").href = `/profile?id=${id}`;
-                document.getElementById("servicerequests").href = `/servicerequests?id=${id}`;
-                document.getElementById("resources").href = `/resources?id=${id}`;
-                document.getElementById("census").href = `/census?id=${id}`;
-                document.getElementById("WelSch").href = `/schemes?id=${id}`;
+                document.getElementById("home").href = `/home?id=${id}&monitor=${true}`;
+                document.getElementById("profile").href = `/profile?id=${id}&monitor=${true}`;
+                document.getElementById("resources").href = `/resources?id=${id}&monitor=${true}`;
+                document.getElementById("census").href = `/census?id=${id}&monitor=${true}`;
+                document.getElementById("WelSch").href = `/schemes?id=${id}&monitor=${true}`;
             }
         };
 
@@ -157,22 +156,17 @@
 
     <!-- Sidebar -->
     <div class="sidebar">
-        <a id="home" href="/home">🏠 Home</a>
-        <a id="profile" href="/profile">👤 Profile</a>
-        <a id="certificates" href="/certificates">📜 Sanction Certificates</a>
-        <a id="resources" href="/resources">📂 View Resources</a>
-        <a id="census" href="/census">📊 Census Data</a>
+        <a id="home" href="/">🏠 Home</a>
+        <a id="profile" href="/">👤 Profile</a>
+        <a id="resources" href="/">📂 View Resources</a>
+        <a id="census" href="/">📊 Census Data</a>
+        <a id="WelSch" href="/">💰 Schemes Data</a>
     </div>
 
     <!-- Main Content -->
     <div class="main-content">
         <h1>Welcome, {{ username }}!</h1>
-        <p>You have access to government data and certification services.</p>
-
-        <div class="section">
-            <h2>📜 Sanction Certificates</h2>
-            <p>Approve and manage birth certificates, death certificates, and other official documents.</p>
-        </div>
+        <p>You are Monitor and have access to the following data</p>
 
         <div class="section">
             <h2>📂 View Resources</h2>
@@ -181,8 +175,15 @@
 
         <div class="section">
             <h2>📊 Census Data</h2>
-            <p>Analyze and review the latest census data for policymaking and governance.</p>
+            <p>Analyze and add the latest census data for policymaking and governance.</p>
         </div>
+        
+        <div class="section">
+            <h2>💰 Schemes Data</h2>
+            <p>Analyze the acceptance of various Welfare Schemes by public.</p>
+        </div>
+
+        
     </div>
 
 </body>

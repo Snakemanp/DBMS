@@ -124,7 +124,12 @@ def login():
 
 @app.route('/home')
 def home():
+    is_monitor = request.args.get('monitor', default="false").lower() == "true"
     userid = request.args.get('id', type=int)
+    if is_monitor:
+        monitor = User.query.filter_by(userid = userid).first()
+        return render_template("Home_monitor.html",username=monitor.username)
+
     citizen = Citizen.query.filter_by(citizenid=userid).first()
     employee = Employee.query.filter_by(citizenid=userid).first()
     
@@ -201,6 +206,7 @@ def update_citizen():
         db.session.rollback()
         return jsonify({"error": f"Database error: {str(e)}"}), 500
 
+#schemes
 @app.route('/schemes')
 def scheme():
     userid = request.args.get('id', type=int)

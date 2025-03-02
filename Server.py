@@ -266,6 +266,10 @@ def update_citizen():
 @app.route('/schemes')
 def scheme():
     userid = request.args.get('id', type=int)
+    is_monitor = request.args.get('monitor', default="false").lower() == "true"
+    if is_monitor:
+        return send_file("Schemes_monitor.html")
+    
     citizen = Citizen.query.filter_by(citizenid=userid).first()
     employee = Employee.query.filter_by(citizenid=userid).first()
     
@@ -277,8 +281,28 @@ def scheme():
 @app.route('/schemes/getschemes')
 def getscheme():
     userid = request.args.get('id', type=int)
+    is_monitor = request.args.get('monitor', default="false").lower() == "true"
     only_applied = request.args.get('onlyapplied', default="false").lower() == "true"
     schemes = []
+
+    if is_monitor:
+        # Fetch all schemes and count the number of citizens participating (status=True)
+        monitored_schemes = (
+            db.session.query(Scheme.schemeid, Scheme.schemename, Scheme.description, db.func.count(Schemeapp.applicationid))
+            .outerjoin(Schemeapp, (Scheme.schemeid == Schemeapp.schemeid) & (Schemeapp.status == True))
+            .group_by(Scheme.schemeid)
+            .all()
+        )
+        
+        for schemeid, schemename, description, participant_count in monitored_schemes:
+            schemes.append({
+                "schemeid": schemeid,
+                "SchemeName": schemename,
+                "Description": description,
+                "Participants": participant_count
+            })
+        return jsonify(schemes)
+    
     if not userid:
         return jsonify({"error": "User ID is required"}), 400
 

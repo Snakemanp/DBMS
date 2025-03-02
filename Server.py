@@ -9,11 +9,11 @@ import calendar
 app = Flask(__name__)
 
 # PostgreSQL database configuration
-DB_USERNAME = "postgres"
-DB_PASSWORD = "sherlock221"
-DB_HOST = "127.0.0.1"
+DB_USERNAME = "22CS10015"
+DB_PASSWORD = "22CS10015"
+DB_HOST = "10.5.18.69"
 DB_PORT = "5432"
-DB_NAME = "postgres"
+DB_NAME = "22CS10015"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -533,6 +533,7 @@ def add_cultivation():
 
 @app.route('/resources')
 def resources_page():
+    print("Entered")
     is_monitor = request.args.get('monitor', default="false").lower() == "true"
     if is_monitor:
         return send_file("Resources_monitor.html")
@@ -540,6 +541,7 @@ def resources_page():
     employee = Employee.query.filter_by(citizenid = d).first()
     if not employee:
         return "User not found", 404
+    print("Sent")
     return send_file('Resources_employee.html')
 
 @app.route('/api/resources', methods=['GET'])

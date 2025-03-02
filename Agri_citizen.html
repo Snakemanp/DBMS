@@ -188,7 +188,6 @@
         let userId; // Global variable to store the user ID
     
         window.onload = function() {
-            alert("Welcome to the Agriculture Records Dashboard!");
             const params = new URLSearchParams(window.location.search);
             userId = params.get("id"); // Set the global userId
             if (userId) {

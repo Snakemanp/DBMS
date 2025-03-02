@@ -48,7 +48,6 @@ class Scheme(db.Model):
     __tablename__ = 'welfarescheme'  # Table name in the database
 
     schemeid = db.Column(db.Integer, primary_key=True)
-
     # Scheme Details
     schemename = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.Text, nullable=False)
@@ -85,6 +84,16 @@ class CultivationRecord(db.Model):
     cultivatedarea = db.Column(db.Float, nullable=False)
     productionquantity = db.Column(db.Float)
 
+class Asset(db.Model):
+    __tablename__ = 'assets'
+    assetid = db.Column(db.Integer, primary_key=True, autoincrement=True)  
+    # assetid = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(100), nullable=False)
+    location = db.Column(db.String(255), nullable=False)
+    installationdate = db.Column(db.Date, nullable=False)
+    condition = db.Column(db.String(50), nullable=False)
+    lastmaintenancedate = db.Column(db.Date)
+    
 @app.route('/')
 def login_page():
     return send_file("Home.html")
@@ -201,7 +210,6 @@ def scheme():
 def getscheme():
     userid = request.args.get('id', type=int)
     only_applied = request.args.get('onlyapplied', default="false").lower() == "true"
-
     schemes = []
     if not userid:
         return jsonify({"error": "User ID is required"}), 400
@@ -369,10 +377,49 @@ def add_cultivation():
 
     return jsonify({"message": "Cultivation record added successfully!"}), 201
 
-#Monitor code
-@app.route('/home', methods=['POST'])
-def add_cultivation():
 
+@app.route('/resources')
+def resources_page():
+    d = request.args.get('id', type=int)
+    employee = Employee.query.filter_by(citizenid = d).first()
+    if not employee:
+        return "User not found", 404
+    return send_file('Resources_employee.html')
+
+@app.route('/api/resources', methods=['GET'])
+def get_resources():
+    resources = Asset.query.all()
+    return jsonify([{
+        'id': resource.assetid,
+        'type': resource.type,
+        'location': resource.location,
+        'installationdate': resource.installationdate.strftime('%Y-%m-%d'),
+        'condition': resource.condition,
+        'lastmaintenancedate': resource.lastmaintenancedate.strftime('%Y-%m-%d') if resource.lastmaintenancedate else 'N/A'
+    } for resource in resources])
+
+@app.route('/api/resources', methods=['POST'])
+def add_resource():
+    data = request.json
+    new_resource = Asset(
+        type=data['type'],
+        location=data['location'],
+        installationdate=datetime.strptime(data['installationdate'], '%Y-%m-%d'),
+        condition=data['condition'],
+        lastmaintenancedate=datetime.strptime(data['lastmaintenancedate'], '%Y-%m-%d') if data.get('lastmaintenancedate') else None
+    )
+    db.session.add(new_resource)
+    db.session.commit()
+    return jsonify({'message': 'Resource added successfully'}), 201
+
+@app.route('/api/resources/<int:assetid>', methods=['DELETE'])
+def delete_resource(assetid):
+    resource = Asset.query.get(assetid)
+    if resource:
+        db.session.delete(resource)
+        db.session.commit()
+        return jsonify({'message': 'Resource deleted successfully'}), 200
+    return jsonify({'error': 'Resource not found'}), 404
 
 
 if __name__ == "__main__":
